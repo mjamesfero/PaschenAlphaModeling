@@ -1,4 +1,6 @@
-def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, hotpixels=False, biascol=False):
+def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, 
+    counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
+    hotpixels=False, biascol=False):
     import numpy as np
     blank_image = np.zeros([size, size])
     ## based off of https://mwcraig.github.io/ccd-as-book/01-03-Construction-of-an-artificial-but-realistic-image.html
@@ -37,13 +39,17 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, counts=10000,
         sky_im = np.random.poisson(sky, size=image.shape)
         dark_bias_noise_im += sky_im
     ##stars
-    from photutils.datasets import make_random_gaussians_table, make_gaussian_sources_image
+    from photutils.datasets import make_random_gaussians_table, make_model_sources_image
+    from astropy.convolution import AiryDisk2DKernel
+    from scipy.signal import convolve
+    from astropy.modeling import models
     flux_range = [counts/100, counts]
     y_max, x_max = shape
     xmean_range = [0.01 * x_max, 0.99 * x_max]
     ymean_range = [0.01 * y_max, 0.99 * y_max]
     xstddev_range = [1, 4]
     ystddev_range = [1, 4]
+    model = models.AiryDisk2D(fwhm)
     params = dict([('amplitude', flux_range),
                   ('x_mean', xmean_range),
                   ('y_mean', ymean_range),
@@ -52,19 +58,16 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, counts=10000,
                   ('theta', [0, 2*np.pi])])
     sources = make_random_gaussians_table(stars, params,
                                           random_state=12345)
-    star_im = make_gaussian_sources_image(shape, sources)
+    star_im = make_model_sources_image(shape, model, sources)
     ##stars and background
-    from astropy.convolution import AiryDisk2DKernel
-    from scipy.signal import convolve
-    stars_background = star_im + dark_bias_noise_im
-    stars_background_im = convolve(AiryDisk2DKernel(fwhm), stars_background)
+    stars_background_im = star_im + dark_bias_noise_im
     ##turbulence
     from astropy.io import fits
     from turbustat.simulator import make_extended
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
     turbulence = turbulent_data - min_val + 1
-    turbulent_im = convolve(AiryDisk2DKernel(fwhm), turbulence)
+    turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im
     

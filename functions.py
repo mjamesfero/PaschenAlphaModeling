@@ -1,6 +1,7 @@
 def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, 
-    counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
-    hotpixels=False, biascol=False):
+                      counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
+                      hotpixels=False, biascol=False):
+
     import numpy as np
     blank_image = np.zeros([size, size])
     ## based off of https://mwcraig.github.io/ccd-as-book/01-03-Construction-of-an-artificial-but-realistic-image.html

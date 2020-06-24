@@ -1,6 +1,6 @@
 def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, 
                       counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
-                      hotpixels=False, biascol=False):
+                      hotpixels=False, biascol=False, brightness=1):
 
     import numpy as np
     blank_image = np.zeros([size, size])
@@ -67,7 +67,7 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars,
     from turbustat.simulator import make_extended
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
-    turbulence = turbulent_data - min_val + 1
+    turbulence = (turbulent_data - min_val + 1)*brightness
     turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im

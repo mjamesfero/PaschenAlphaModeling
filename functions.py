@@ -1,8 +1,22 @@
-def make_turbulent_im(size, readnoise, bias, dark, exptime, stars, 
-                      counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
-                      hotpixels=False, biascol=False, brightness=1):
+from astropy.convolution import AiryDisk2DKernel
+from astropy.coordinates import SkyCoord
+from astropy.io import fits
+from astropy.modeling import models
+from astroquery.vizier import Vizier
+from matplotlib import pyplot as plt
+from photutils.datasets import make_random_gaussians_table, make_model_sources_image
+from scipy.signal import convolve
+from turbustat.simulator import make_extended
+import astropy.coordinates as coord
+import astropy.units as u
+import numpy as np
 
-    import numpy as np
+plt.rcParams['image.origin'] = 'lower'
+
+def make_turbulent_im(size, readnoise, bias, dark, exptime, stars,
+                      counts=10000, fwhm=3.2, power=3, skybackground=False,
+                      sky=20, hotpixels=False, biascol=False, brightness=1):
+
     blank_image = np.zeros([size, size])
     ## based off of https://mwcraig.github.io/ccd-as-book/01-03-Construction-of-an-artificial-but-realistic-image.html
     ##pretty much just copy paste and combined functions
@@ -30,9 +44,9 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars,
         n_hot = int(0.00002 * x_max * y_max)
         rng = np.random.RandomState(16201649)
         hot_x = rng.randint(0, x_max, size=n_hot)
-        hot_y = rng.randint(0, y_max, size=n_hot)   
+        hot_y = rng.randint(0, y_max, size=n_hot)
         hot_current = 10000 * dark
-        dark_im[[hot_y, hot_x]] = hot_current * exptime 
+        dark_im[[hot_y, hot_x]] = hot_current * exptime
     ##dark bias readnoise hot pixels
     dark_bias_noise_im = bias_noise_im + dark_im
     ##optional skybackground
@@ -40,10 +54,6 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars,
         sky_im = np.random.poisson(sky, size=image.shape)
         dark_bias_noise_im += sky_im
     ##stars
-    from photutils.datasets import make_random_gaussians_table, make_model_sources_image
-    from astropy.convolution import AiryDisk2DKernel
-    from scipy.signal import convolve
-    from astropy.modeling import models
     flux_range = [counts/100, counts]
     y_max, x_max = shape
     xmean_range = [0.01 * x_max, 0.99 * x_max]
@@ -63,25 +73,22 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, stars,
     ##stars and background
     stars_background_im = star_im + dark_bias_noise_im
     ##turbulence
-    from astropy.io import fits
-    from turbustat.simulator import make_extended
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
     turbulence = (turbulent_data - min_val + 1)*brightness
     turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im
-    
+
     return stars_background_im, turbulent_stars, turbulence
 
 
 
 
-def make_realistic_im(size, readnoise, bias, dark, exptime, stars, 
-                      counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20, 
+def make_realistic_im(size, readnoise, bias, dark, exptime, stars,
+                      counts=10000, fwhm=3.2, power=3, skybackground=False, sky=20,
                       hotpixels=False, biascol=False, brightness=1):
 
-    import numpy as np
     blank_image = np.zeros([size, size])
     ## based off of https://mwcraig.github.io/ccd-as-book/01-03-Construction-of-an-artificial-but-realistic-image.html
     ##pretty much just copy paste and combined functions
@@ -109,9 +116,9 @@ def make_realistic_im(size, readnoise, bias, dark, exptime, stars,
         n_hot = int(0.00002 * x_max * y_max)
         rng = np.random.RandomState(16201649)
         hot_x = rng.randint(0, x_max, size=n_hot)
-        hot_y = rng.randint(0, y_max, size=n_hot)   
+        hot_y = rng.randint(0, y_max, size=n_hot)
         hot_current = 10000 * dark
-        dark_im[[hot_y, hot_x]] = hot_current * exptime 
+        dark_im[[hot_y, hot_x]] = hot_current * exptime
     ##dark bias readnoise hot pixels
     dark_bias_noise_im = bias_noise_im + dark_im
     ##optional skybackground
@@ -119,10 +126,6 @@ def make_realistic_im(size, readnoise, bias, dark, exptime, stars,
         sky_im = np.random.poisson(sky, size=image.shape)
         dark_bias_noise_im += sky_im
     ##stars
-    from photutils.datasets import make_random_gaussians_table, make_model_sources_image
-    from astropy.convolution import AiryDisk2DKernel
-    from scipy.signal import convolve
-    from astropy.modeling import models
     flux_range = [counts/100, counts]
     y_max, x_max = shape
     xmean_range = [0.01 * x_max, 0.99 * x_max]
@@ -142,96 +145,22 @@ def make_realistic_im(size, readnoise, bias, dark, exptime, stars,
     ##stars and background
     stars_background_im = star_im + dark_bias_noise_im
     ##turbulence
-    from astropy.io import fits
-    from turbustat.simulator import make_extended
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
     turbulence = (turbulent_data - min_val + 1)*brightness
     turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im
-    
+
     return stars_background_im, turbulent_stars, turbulence
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#ideally this will combine the steps of getting the stars and making the synth image but 
+#ideally this will combine the steps of getting the stars and making the synth image but
 #not in the immediate future (i.e. not this week)
-def skysurvey(lat_lower, lat_upper lon_lower, lon_upper VVV=False, 
-                pixel_scale=0.75, patience=3000, rowlim=3e5):
+def skysurvey(lat_lower, lat_upper lon_lower, lon_upper VVV=False,
+              pixel_scale=0.75, patience=3000, rowlim=3e5):
     #lat can be negative but lon must be between [0,360)
-    %matplotlib inline
-    plt.rcParams['image.origin'] = 'lower' 
-    from matplotlib import pyplot as plt
-    from astroquery.vizier import Vizier
-    from astropy.coordinates import SkyCoord
-    import astropy.coordinates as coord
-    import astropy.units as u
-    import numpy as np
     Vizier = Vizier(timeout=patience)
     Vizier.ROW_LIMIT = rowlim
     if VVV==True
@@ -239,13 +168,13 @@ def skysurvey(lat_lower, lat_upper lon_lower, lon_upper VVV=False,
     else:
         if lat_upper < lat_lower:
             lat = f"<{lat_upper} | > {lat_lower}"
-        else: 
+        else:
             lat = f"< {lat_upper} & > {lat_lower}"
         if lon_upper < lon_lower:
             lon = f"<{lon_upper} | > {lon_lower}"
-        else: 
+        else:
             lon = f"< {lon_upper} & > {lon_lower}"
-        rslt = Vizier.query_constraints(catalog="II/246", GLAT=lat, 
+        rslt = Vizier.query_constraints(catalog="II/246", GLAT=lat,
                                         Kmag='<7', GLON=lon)[0]
         crds = coord.SkyCoord(rslt['RAJ2000'], rslt['DEJ2000'], frame='fk5', unit=(u.deg, u.deg)).galactic
 

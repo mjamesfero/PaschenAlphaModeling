@@ -14,6 +14,7 @@ import numpy as np
 plt.rcParams['image.origin'] = 'lower'
 
 def make_model_sources_image_faster(shape, model, source_table,
+                                    bbox_size=5,
                                     progressbar=False):
     """
     Make an image containing sources generated from a user-specified
@@ -35,6 +36,9 @@ def make_model_sources_image_faster(shape, model, source_table,
         Column names that do not match model parameters will be ignored.
         Model parameters not defined in the table will be set to the
         ``model`` default value.
+
+    bbox_size : float
+        Size of bounding box in number of radii...
 
     Returns
     -------
@@ -92,6 +96,12 @@ def make_model_sources_image_faster(shape, model, source_table,
         for source in progressbar(source_table):
             for param in params_to_set:
                 setattr(model, param, source[param])
+
+            # ONLY applies to airy!
+            model.bounding_box = [(model.y_0-bbox_size*model.radius,
+                                   model.y_0+bbox_size*model.radius),
+                                  (model.x_0-bbox_size*model.radius,
+                                   model.x_0+bbox_size*model.radius)]
 
             model.render(image)
     finally:

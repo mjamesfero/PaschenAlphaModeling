@@ -163,7 +163,7 @@ def skysurvey(lat_lower, lat_upper lon_lower, lon_upper VVV=False,
     #lat can be negative but lon must be between [0,360)
     Vizier = Vizier(timeout=patience)
     Vizier.ROW_LIMIT = rowlim
-    if VVV==True
+    if VVV:
         asa = 1
     else:
         if lat_upper < lat_lower:
@@ -174,6 +174,7 @@ def skysurvey(lat_lower, lat_upper lon_lower, lon_upper VVV=False,
             lon = f"<{lon_upper} | > {lon_lower}"
         else:
             lon = f"< {lon_upper} & > {lon_lower}"
+        # II/246 = 2MASS
         rslt = Vizier.query_constraints(catalog="II/246", GLAT=lat,
                                         Kmag='<7', GLON=lon)[0]
         crds = coord.SkyCoord(rslt['RAJ2000'], rslt['DEJ2000'], frame='fk5', unit=(u.deg, u.deg)).galactic

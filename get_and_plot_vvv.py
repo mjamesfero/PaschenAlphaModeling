@@ -10,7 +10,6 @@ from astropy import table
 from astropy.utils.console import ProgressBar
 from photutils.datasets import make_random_gaussians_table, make_model_sources_image
 
-import pylab as pl
 from astropy import visualization
 
 import functions

@@ -75,7 +75,7 @@ zpt = ks['ZeroPoint'].quantity
 
 fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt
 bad_vvv = (cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > sz) |
-          (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > sz) | (~vvv_faint))
+           (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > sz) | (~vvv_faint))
 
 phot_fluxes = fluxes[~bad_vvv] / pa_energy * u.photon
 
@@ -102,7 +102,7 @@ ks = filt_tbl[filt_tbl['filterID'] == b'2MASS/2MASS.Ks']
 zpt = ks['ZeroPoint'].quantity
 
 fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt
-bad_2mass = ((cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
+bad_2mass = (cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
              (pix_coords_2mass[0] > sz) | (pix_coords_2mass[1] < 0) |
              (pix_coords_2mass[1] > sz) | (~twomass_bright))
 

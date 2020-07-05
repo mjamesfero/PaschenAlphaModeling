@@ -1,12 +1,10 @@
-from get_and_plot_vvv import get_and_plot_vvv
+import numpy as np
 
-from astropy import visualization
-import pylab as pl
-
-from astropy import coordinates as coord
-from astropy.coordinates import SkyCoord
 from astropy import units as u
 
+import json
+
+from get_and_plot_vvv import get_and_plot_vvv
 
 results = {(glon, glat): get_and_plot_vvv(glon*u.deg, glat*u.deg)
            for glon, glat in
@@ -26,3 +24,20 @@ results = {(glon, glat): get_and_plot_vvv(glon*u.deg, glat*u.deg)
             (180.0, 0.1), (180.0, 1), (180.0, 2), (180.0, 3), (180.0, -1),
            ]
           }
+
+# value[0] is stars_background_im
+# let's determine the various percentiles: what's the 10%, 25%, etc. background
+# level?
+# "key" is glon,glat, which has to be stringified so we can save it below
+stats = {"{0}_{1}".format(*key):
+         {'glon': key[0],
+          'glat': key[1],
+          10: np.percentile(value[0], 10),
+          25: np.percentile(value[0], 25),
+          50: np.percentile(value[0], 50),
+          75: np.percentile(value[0], 75),
+         }
+         for key, value in results.items()}
+
+with open('percentiles_by_glonglat.json', 'w') as fh:
+    json.dump(obj=stats, fp=fh)

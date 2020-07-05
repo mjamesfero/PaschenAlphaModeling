@@ -8,21 +8,27 @@ from astropy.table import Table
 from astropy.utils.console import ProgressBar
 from photutils.datasets import make_random_gaussians_table, make_model_sources_image
 
+import pylab as pl
+from astropy import visualization
+
 import functions
 
 
 glon, glat = 2.5*u.deg, 0.1*u.deg
 fov = 25*u.arcmin
 
-Viz = Vizier(row_limit=3e5)
-vvvcats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
-                           radius=fov/2, catalog=["II/337", "II/348"])
+Viz = Vizier(row_limit=4e5)
+cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
+                        radius=fov/2**0.5, catalog=["II/337", "II/348",
+                                                    "II/246"])
 
-cat1, cat2 = vvvcats
-cat1c = SkyCoord(vvvcats[0]['RAJ2000'], vvvcats[0]['DEJ2000'], frame='fk5',
+cat1, cat2, cat2mass = vvvcats
+cat1c = SkyCoord(cat1['RAJ2000'], cat1['DEJ2000'], frame='fk5',
                  unit=(u.deg, u.deg)).galactic
-cat2c = SkyCoord(vvvcats[1]['RAJ2000'], vvvcats[1]['DEJ2000'], frame='fk5',
+cat2c = SkyCoord(cat2['RAJ2000'], cat2['DEJ2000'], frame='fk5',
                  unit=(u.deg, u.deg)).galactic
+coords2mass = SkyCoord(cat2mass['RAJ2000'], cat2mass['DEJ2000'], frame='fk5',
+                       unit=(u.deg, u.deg)).galactic
 
 
 
@@ -87,46 +93,9 @@ rslt = functions.make_turbulent_im(size=sz, readnoise=100, bias=100, dark=10,
                                    brightness=0, progressbar=ProgressBar)
 stars_background_im, turbulent_stars, turbulence = rslt
 
-import pylab as pl
-from astropy import visualization
+# TODO: add in 2MASS bright stars
+
+
 pl.imshow(stars_background_im,
           norm=visualization.simple_norm(stars_background_im, stretch='asinh',
-                                         max_percent=99, min_percent=1))
-
-#rslt2 = functions.make_turbulent_im(size=sz, readnoise=0, bias=0, dark=0,
-#                                   exptime=exptime.value, nstars=None,
-#                                   sources=source_table,
-#                                   fwhm=(fwhm/pixscale).value, power=3, skybackground=False,
-#                                   sky=20, hotpixels=False, biascol=False,
-#                                   brightness=0, progressbar=ProgressBar)
-#stars_background_im, turbulent_stars, turbulence = rslt2
-#
-#pl.imshow(stars_background_im,
-#          norm=visualization.simple_norm(stars_background_im, stretch='asinh',
-#                                         max_percent=99.95, min_percent=0.0001))
-
-
-#from astropy.modeling import models
-#model = models.AiryDisk2D((fwhm/pixscale).value)
-#row=source_table[0]
-#model.amplitude = float(row['amplitude'])
-#model.x_0 = row['x_0']
-#model.y_0 = row['y_0']
-#model.radius = row['radius']
-#bbox_size=5
-#model.bounding_box = [(model.y_0-bbox_size*model.radius,
-#                       model.y_0+bbox_size*model.radius),
-#                      (model.x_0-bbox_size*model.radius,
-#                       model.x_0+bbox_size*model.radius)]
-#model.render(stars_background_im)
-#stars_background_im[1890:1920, 281:311].max()
-#
-#bbox = model.bounding_box
-#pd = np.array([(np.mean(bb), np.ceil((bb[1] - bb[0]) / 2))
-#               for bb in bbox]).astype(int).T
-#limits = [slice(p - d, p + d + 1, 1) for p, d in pd.T]
-#sub_coords = np.mgrid[limits]
-#sub_coords = sub_coords[::-1]
-#print(model(*sub_coords).max())
-#
-#print(stars_background_im[limits].max())
+                                         max_percent=99, min_percent=1e-4))

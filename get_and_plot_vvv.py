@@ -93,40 +93,40 @@ pl.imshow(stars_background_im,
           norm=visualization.simple_norm(stars_background_im, stretch='asinh',
                                          max_percent=99, min_percent=1))
 
-rslt2 = functions.make_turbulent_im(size=sz, readnoise=0, bias=0, dark=0,
-                                   exptime=exptime.value, nstars=None,
-                                   sources=source_table,
-                                   fwhm=(fwhm/pixscale).value, power=3, skybackground=False,
-                                   sky=20, hotpixels=False, biascol=False,
-                                   brightness=0, progressbar=ProgressBar)
-stars_background_im, turbulent_stars, turbulence = rslt2
+#rslt2 = functions.make_turbulent_im(size=sz, readnoise=0, bias=0, dark=0,
+#                                   exptime=exptime.value, nstars=None,
+#                                   sources=source_table,
+#                                   fwhm=(fwhm/pixscale).value, power=3, skybackground=False,
+#                                   sky=20, hotpixels=False, biascol=False,
+#                                   brightness=0, progressbar=ProgressBar)
+#stars_background_im, turbulent_stars, turbulence = rslt2
+#
+#pl.imshow(stars_background_im,
+#          norm=visualization.simple_norm(stars_background_im, stretch='asinh',
+#                                         max_percent=99.95, min_percent=0.0001))
 
-pl.imshow(stars_background_im,
-          norm=visualization.simple_norm(stars_background_im, stretch='asinh',
-                                         max_percent=99.95, min_percent=0.01))
 
-
-from astropy.modeling import models
-model = models.AiryDisk2D((fwhm/pixscale).value)
-row=source_table[0]
-model.amplitude = float(row['amplitude'])
-model.x_0 = row['x_0']
-model.y_0 = row['y_0']
-model.radius = row['radius']
-bbox_size=5
-model.bounding_box = [(model.y_0-bbox_size*model.radius,
-                       model.y_0+bbox_size*model.radius),
-                      (model.x_0-bbox_size*model.radius,
-                       model.x_0+bbox_size*model.radius)]
-model.render(stars_background_im)
-stars_background_im[1890:1920, 281:311].max()
-
-bbox = model.bounding_box
-pd = np.array([(np.mean(bb), np.ceil((bb[1] - bb[0]) / 2))
-               for bb in bbox]).astype(int).T
-limits = [slice(p - d, p + d + 1, 1) for p, d in pd.T]
-sub_coords = np.mgrid[limits]
-sub_coords = sub_coords[::-1]
-print(model(*sub_coords).max())
-
-print(stars_background_im[limits].max())
+#from astropy.modeling import models
+#model = models.AiryDisk2D((fwhm/pixscale).value)
+#row=source_table[0]
+#model.amplitude = float(row['amplitude'])
+#model.x_0 = row['x_0']
+#model.y_0 = row['y_0']
+#model.radius = row['radius']
+#bbox_size=5
+#model.bounding_box = [(model.y_0-bbox_size*model.radius,
+#                       model.y_0+bbox_size*model.radius),
+#                      (model.x_0-bbox_size*model.radius,
+#                       model.x_0+bbox_size*model.radius)]
+#model.render(stars_background_im)
+#stars_background_im[1890:1920, 281:311].max()
+#
+#bbox = model.bounding_box
+#pd = np.array([(np.mean(bb), np.ceil((bb[1] - bb[0]) / 2))
+#               for bb in bbox]).astype(int).T
+#limits = [slice(p - d, p + d + 1, 1) for p, d in pd.T]
+#sub_coords = np.mgrid[limits]
+#sub_coords = sub_coords[::-1]
+#print(model(*sub_coords).max())
+#
+#print(stars_background_im[limits].max())

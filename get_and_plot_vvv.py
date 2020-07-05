@@ -8,28 +8,23 @@ from astropy.table import Table
 from astropy.utils.console import ProgressBar
 from photutils.datasets import make_random_gaussians_table, make_model_sources_image
 
-import pylab as pl
-from astropy import visualization
-
 import functions
 
 
 glon, glat = 2.5*u.deg, 0.1*u.deg
 fov = 25*u.arcmin
 
-Viz = Vizier(row_limit=4e5)
-cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
-                        radius=fov/2**0.5, catalog=["II/337", "II/348",
-                                                    "II/246"])
+Viz = Vizier(row_limit=3e5)
+vvvcats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
+                           radius=fov/2, catalog=["II/337", "II/348", "II/246"])
 
-cat1, cat2, cat2mass = vvvcats
-cat1c = SkyCoord(cat1['RAJ2000'], cat1['DEJ2000'], frame='fk5',
+cat1, cat2, cat3 = vvvcats
+cat1c = SkyCoord(vvvcats[0]['RAJ2000'], vvvcats[0]['DEJ2000'], frame='fk5',
                  unit=(u.deg, u.deg)).galactic
-cat2c = SkyCoord(cat2['RAJ2000'], cat2['DEJ2000'], frame='fk5',
+cat2c = SkyCoord(vvvcats[1]['RAJ2000'], vvvcats[1]['DEJ2000'], frame='fk5',
                  unit=(u.deg, u.deg)).galactic
-coords2mass = SkyCoord(cat2mass['RAJ2000'], cat2mass['DEJ2000'], frame='fk5',
-                       unit=(u.deg, u.deg)).galactic
-
+cat3c = SkyCoord(vvvcats[2]['RAJ2000'], vvvcats[2]['DEJ2000'], frame='fk5',
+                 unit=(u.deg, u.deg)).galactic
 
 
 sz = 2048
@@ -51,7 +46,9 @@ header = {'CRPIX1': sz/2,
          }
 target_image_wcs = wcs.WCS(header=header)
 
-pix_coords = target_image_wcs.wcs_world2pix(cat2c.l.deg, cat2c.b.deg, 0)
+pix_coords_vvv = target_image_wcs.wcs_world2pix(cat2c.l.deg, cat2c.b.deg, 0)
+pix_coords_2mass = target_image_wcs.wcs_world2pix(cat3c.l.deg, cat3c.b.deg, 0)
+pix_coords = np.append(pix_coords_vvv, pix_coords_2mass, axis=1)
 
 from astroquery.svo_fps import SvoFps
 
@@ -59,8 +56,12 @@ filt_tbl = SvoFps.get_filter_list(facility='Paranal')
 ks = filt_tbl[filt_tbl['filterID'] == b'Paranal/VISTA.Ks']
 zpt = ks['ZeroPoint'].quantity
 
-fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt
-bad = cat2['Ksmag3'].mask | (pix_coords[0] < 0) | (pix_coords[0] > sz) | (pix_coords[1] < 0) | (pix_coords[1] > sz)
+fluxes_vvv = (10**(cat2['Ksmag3'] / -2.5)) * zpt
+fluxes_2mass = (10**(cat3['Kmag'] / -2.5)) * zpt
+fluxes = u.Quantity(np.append(fluxes_vvv, fluxes_2mass))*u.Jy
+bad_vvv = cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > sz) | (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > sz)
+bad_2mass = cat3['Kmag'].mask | (pix_coords_2mass[0] < 0) | (pix_coords_2mass[0] > sz) | (pix_coords_2mass[1] < 0) | (pix_coords_2mass[1] > sz)
+bad = np.append(bad_vvv, bad_2mass)
 
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
@@ -93,9 +94,46 @@ rslt = functions.make_turbulent_im(size=sz, readnoise=100, bias=100, dark=10,
                                    brightness=0, progressbar=ProgressBar)
 stars_background_im, turbulent_stars, turbulence = rslt
 
-# TODO: add in 2MASS bright stars
-
-
+import pylab as pl
+from astropy import visualization
 pl.imshow(stars_background_im,
           norm=visualization.simple_norm(stars_background_im, stretch='asinh',
-                                         max_percent=99, min_percent=1e-4))
+                                         max_percent=99, min_percent=1))
+
+#rslt2 = functions.make_turbulent_im(size=sz, readnoise=0, bias=0, dark=0,
+#                                   exptime=exptime.value, nstars=None,
+#                                   sources=source_table,
+#                                   fwhm=(fwhm/pixscale).value, power=3, skybackground=False,
+#                                   sky=20, hotpixels=False, biascol=False,
+#                                   brightness=0, progressbar=ProgressBar)
+#stars_background_im, turbulent_stars, turbulence = rslt2
+#
+#pl.imshow(stars_background_im,
+#          norm=visualization.simple_norm(stars_background_im, stretch='asinh',
+#                                         max_percent=99.95, min_percent=0.0001))
+
+
+#from astropy.modeling import models
+#model = models.AiryDisk2D((fwhm/pixscale).value)
+#row=source_table[0]
+#model.amplitude = float(row['amplitude'])
+#model.x_0 = row['x_0']
+#model.y_0 = row['y_0']
+#model.radius = row['radius']
+#bbox_size=5
+#model.bounding_box = [(model.y_0-bbox_size*model.radius,
+#                       model.y_0+bbox_size*model.radius),
+#                      (model.x_0-bbox_size*model.radius,
+#                       model.x_0+bbox_size*model.radius)]
+#model.render(stars_background_im)
+#stars_background_im[1890:1920, 281:311].max()
+#
+#bbox = model.bounding_box
+#pd = np.array([(np.mean(bb), np.ceil((bb[1] - bb[0]) / 2))
+#               for bb in bbox]).astype(int).T
+#limits = [slice(p - d, p + d + 1, 1) for p, d in pd.T]
+#sub_coords = np.mgrid[limits]
+#sub_coords = sub_coords[::-1]
+#print(model(*sub_coords).max())
+#
+#print(stars_background_im[limits].max())

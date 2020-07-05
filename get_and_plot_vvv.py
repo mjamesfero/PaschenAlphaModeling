@@ -65,11 +65,12 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     # Assemble source table from VVV sources
     pix_coords_vvv = target_image_wcs.wcs_world2pix(cat2c.l.deg, cat2c.b.deg, 0)
 
-    filt_tbl = SvoFps.get_filter_list(facility='Paranal')
-    ks = filt_tbl[filt_tbl['filterID'] == b'Paranal/VISTA.Ks']
-    zpt = ks['ZeroPoint'].quantity
+    # filt_tbl = SvoFps.get_filter_list(facility='Paranal')
+    # ks = filt_tbl[filt_tbl['filterID'] == b'Paranal/VISTA.Ks']
+    # zpt = ks['ZeroPoint'].quantity
+    zpt_vista = 669.5625*u.Jy
 
-    fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt
+    fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt_vista
     bad_vvv = (cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))
 
@@ -93,11 +94,12 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     pix_coords_2mass = target_image_wcs.wcs_world2pix(coords2mass.l.deg,
                                                       coords2mass.b.deg, 0)
 
-    filt_tbl = SvoFps.get_filter_list(facility='2MASS')
-    ks = filt_tbl[filt_tbl['filterID'] == b'2MASS/2MASS.Ks']
-    zpt = ks['ZeroPoint'].quantity
+    # filt_tbl = SvoFps.get_filter_list(facility='2MASS')
+    # ks = filt_tbl[filt_tbl['filterID'] == b'2MASS/2MASS.Ks']
+    # zpt = ks['ZeroPoint'].quantity
+    zpt_2mass = 666.8*u.Jy
 
-    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt
+    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt_2mass
     bad_2mass = (cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |
                  (pix_coords_2mass[1] > imsize) | (~twomass_bright))

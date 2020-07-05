@@ -111,10 +111,10 @@ def make_model_sources_image_faster(shape, model, source_table,
     return image
 
 
-def make_turbulent_im(size, readnoise, bias, dark, exptime, nstars=None,
-                      sources=None, counts=10000, fwhm=3.2, power=3,
+def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
+                      sources=None, counts=10000, fwhm=3.2,
                       skybackground=False, sky=20, hotpixels=False,
-                      biascol=False, brightness=1, progressbar=False):
+                      biascol=False, progressbar=False):
     """
     Parameters
     ----------
@@ -195,16 +195,38 @@ def make_turbulent_im(size, readnoise, bias, dark, exptime, nstars=None,
                                               progressbar=progressbar)
     ##stars and background
     stars_background_im = star_im + dark_bias_noise_im
+
+    return stars_background_im
+
+def make_turbulence_im(size, fwhm=3.2, power=3, brightness=1):
     ##turbulence
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
     turbulence = (turbulent_data - min_val + 1)*brightness
     turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
+
+    return turbulent_im
+
+def make_turbulent_starry_im(size, readnoise, bias, dark, exptime, nstars=None,
+                             sources=None, counts=10000, fwhm=3.2, power=3,
+                             skybackground=False, sky=20, hotpixels=False,
+                             biascol=False, brightness=1, progressbar=False):
+
+    turbulent_im = make_turbulence_im(size=size, fwhm=fwhm, power=power,
+                                      brightness=brightness)
+
+    stars_background_im = make_stars_im(size=size, readnoise=readnoise,
+                                        bias=bias, dark=dark, exptime=exptime,
+                                        nstars=nstars, sources=sources,
+                                        counts=counts, fwhm=fwhm,
+                                        skybackground=skybackground, sky=sky,
+                                        hotpixels=hotpixels, biascol=biascol,
+                                        progressbar=progressbar)
+
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im
 
-    return stars_background_im, turbulent_stars, turbulence
-
+    return stars_background_im, turbulent_stars, turbulent_im
 
 
 

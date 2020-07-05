@@ -121,13 +121,15 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     source_table_both = table.vstack([source_table, source_table_2mass])
 
 
-    rslt = functions.make_turbulent_im(size=imsize, readnoise=0, bias=0, dark=0,
-                                       exptime=exptime.value, nstars=None,
-                                       sources=source_table_both,
-                                       fwhm=(fwhm/pixscale).value, power=3,
-                                       skybackground=False, sky=0, hotpixels=False,
-                                       biascol=False, brightness=0,
-                                       progressbar=ProgressBar)
+    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=0, bias=0,
+                                              dark=0, exptime=exptime.value,
+                                              nstars=None,
+                                              sources=source_table_both,
+                                              fwhm=(fwhm/pixscale).value,
+                                              power=3, skybackground=False,
+                                              sky=0, hotpixels=False,
+                                              biascol=False, brightness=0,
+                                              progressbar=ProgressBar)
     stars_background_im, turbulent_stars, turbulence = rslt
 
 

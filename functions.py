@@ -228,7 +228,7 @@ def make_turbulent_starry_im(size, readnoise, bias, dark, exptime, nstars=None,
 
     return stars_background_im, turbulent_stars, turbulent_im
 
-def flux_function(wavelength=1875, hmag, kmag, VVV=False):
+def flux_function(hmag, kmag, wavelength=1875, VVV=False):
     """
     Parameters
     ----------

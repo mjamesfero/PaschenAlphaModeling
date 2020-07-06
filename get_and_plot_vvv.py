@@ -25,12 +25,11 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
 
     Viz = Vizier(row_limit=max_rows)
     cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
-                            radius=fov/2**0.5, catalog=["II/337", "II/348",
-                                                        "II/246"])
+                            radius=fov/2**0.5, catalog=["II/348", "II/246"])
 
-    cat1, cat2, cat2mass = cats
-    #cat1c = SkyCoord(cat1['RAJ2000'], cat1['DEJ2000'], frame='fk5',
-    #                 unit=(u.deg, u.deg)).galactic
+    cat2 = cats['II/348/vvv2']
+    cat2mass = cats['II/246/out']
+
     cat2c = SkyCoord(cat2['RAJ2000'], cat2['DEJ2000'], frame='fk5',
                      unit=(u.deg, u.deg)).galactic
     coords2mass = SkyCoord(cat2mass['RAJ2000'], cat2mass['DEJ2000'],

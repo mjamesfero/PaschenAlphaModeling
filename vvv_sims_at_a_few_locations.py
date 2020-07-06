@@ -6,7 +6,14 @@ import json
 
 from get_and_plot_vvv import get_and_plot_vvv
 
-results = {(glon, glat): get_and_plot_vvv(glon*u.deg, glat*u.deg)
+def trytoget(*args, **kwargs):
+    try:
+        return get_and_plot_vvv(*args, **kwargs)
+    except Exception as ex:
+        print(ex)
+        return str(ex)
+
+results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in
            [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
             (-2.5, 0.1), (-2.5, 1), (-2.5, 2), (-2.5, 3), (-2.5, -1),

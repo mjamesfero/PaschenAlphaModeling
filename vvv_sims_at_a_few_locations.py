@@ -1,22 +1,31 @@
 import numpy as np
 
 from astropy import units as u
+from astropy.io import fits
 
 import json
 
 from get_and_plot_vvv import get_and_plot_vvv
 
-def trytoget(*args, **kwargs):
-    try:
-        return get_and_plot_vvv(*args, **kwargs)
-    except Exception as ex:
-        print(ex)
-        return str(ex)
+def trytoget(glon, glat, **kwargs):
+    fn = f"{glon:06.2f}{glat:+06.2f}.fits"
+    if os.path.exists(fn):
+        return fits.getdata(fn), 0, 0, fits.getheader(fn)
+    else:
+        try:
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, **kwargs)
+            fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn, overwrite=True)
+        except Exception as ex:
+            print(ex)
+            return str(ex)
 
 results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in
            [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
             (-2.5, 0.1), (-2.5, 1), (-2.5, 2), (-2.5, 3), (-2.5, -1),
+            (-1.5, 0.1), (-1.5, 1), (-1.5, 2), (-1.5, 3), (-1.5, -1),
+            (1.5, 0.1), (1.5, 1), (1.5, 2), (1.5, 3), (1.5, -1),
+            (0, 0.1), (0, 1), (0, 2), (0, 3), (0, -1),
             (5.0, 0.1), (5.0, 1), (5.0, 2), (5.0, 3), (5.0, -1),
             (-5.0, 0.1), (-5.0, 1), (-5.0, 2), (-5.0, 3), (-5.0, -1),
             (-10.0, 0.1), (-10.0, 1), (-10.0, 2), (-10.0, 3), (-10.0, -1),
@@ -43,6 +52,9 @@ stats = {"{0}_{1}".format(*key):
           25: np.percentile(value[0], 25),
           50: np.percentile(value[0], 50),
           75: np.percentile(value[0], 75),
+          90: np.percentile(value[0], 90),
+          95: np.percentile(value[0], 95),
+          99: np.percentile(value[0], 99),
          }
          for key, value in results.items()
          if not isinstance(value, str)

@@ -6,7 +6,14 @@ import json
 
 from get_and_plot_vvv import get_and_plot_vvv
 
-results = {(glon, glat): get_and_plot_vvv(glon*u.deg, glat*u.deg)
+def trytoget(*args, **kwargs):
+    try:
+        return get_and_plot_vvv(*args, **kwargs)
+    except Exception as ex:
+        print(ex)
+        return str(ex)
+
+results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in
            [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
             (-2.5, 0.1), (-2.5, 1), (-2.5, 2), (-2.5, 3), (-2.5, -1),
@@ -37,7 +44,9 @@ stats = {"{0}_{1}".format(*key):
           50: np.percentile(value[0], 50),
           75: np.percentile(value[0], 75),
          }
-         for key, value in results.items()}
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
 
 with open('percentiles_by_glonglat.json', 'w') as fh:
     json.dump(obj=stats, fp=fh)

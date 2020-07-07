@@ -85,7 +85,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     nsrc = len(phot_ct_rate)
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table = Table({'amplitude': phot_ct,
+    source_table = Table({'amplitude': phot_ct * transmission_fraction,
                           'x_0': pix_coords_vvv[0][~bad_vvv],
                           'y_0': pix_coords_vvv[1][~bad_vvv],
                           'radius': np.repeat(airy_radius/pixscale, nsrc),

@@ -44,7 +44,9 @@ stats = {"{0}_{1}".format(*key):
           50: np.percentile(value[0], 50),
           75: np.percentile(value[0], 75),
          }
-         for key, value in results.items()}
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
 
 with open('percentiles_by_glonglat.json', 'w') as fh:
     json.dump(obj=stats, fp=fh)

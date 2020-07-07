@@ -8,6 +8,9 @@ import json
 
 from get_and_plot_vvv import get_and_plot_vvv
 
+import warnings
+warnings.filterwarnings(action='ignore', category=fits.verify.VerifyWarning)
+
 def trytoget(glon, glat, **kwargs):
     fn = f"{glon:06.2f}{glat:+06.2f}.fits"
     if os.path.exists(fn):
@@ -20,6 +23,7 @@ def trytoget(glon, glat, **kwargs):
             return str(ex)
         header = fits.Header(header)
         fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
+                                                                         output_verify='fix',
                                                                          overwrite=True)
         return stars_background_im
 

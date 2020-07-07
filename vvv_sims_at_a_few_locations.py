@@ -15,12 +15,13 @@ def trytoget(glon, glat, **kwargs):
     else:
         try:
             stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, **kwargs)
-            header = fits.Header.fromkeys(header)
-            fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn, overwrite=True)
-            return stars_background_im
         except Exception as ex:
             print(ex)
             return str(ex)
+        header = fits.Header(header)
+        fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
+                                                                         overwrite=True)
+        return stars_background_im
 
 results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in

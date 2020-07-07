@@ -23,6 +23,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      max_rows=int(4e5), kmag_threshold=8.5,
                      imsize=2048, diameter=24*u.cm,
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
+                     transmission_fraction=0.70*0.75,
                     ):
 
     Viz = Vizier(row_limit=max_rows)
@@ -114,7 +115,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     nsrc = len(phot_ct_rate)
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table_2mass = Table({'amplitude': phot_ct,
+    source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
                                 'x_0': pix_coords_2mass[0][~bad_2mass],
                                 'y_0': pix_coords_2mass[1][~bad_2mass],
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),

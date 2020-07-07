@@ -16,6 +16,7 @@ def trytoget(glon, glat, **kwargs):
         try:
             stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, **kwargs)
             fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn, overwrite=True)
+            return stars_background_im
         except Exception as ex:
             print(ex)
             return str(ex)

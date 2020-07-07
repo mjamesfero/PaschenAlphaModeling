@@ -17,7 +17,8 @@ def trytoget(glon, glat, **kwargs):
         return fits.getdata(fn), 0, 0, fits.getheader(fn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, wavelength=18750, **kwargs)
+            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vvv(glon, glat, wavelength=18800, **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)
@@ -25,7 +26,14 @@ def trytoget(glon, glat, **kwargs):
         fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
-        return stars_background_im
+        header_offset = fits.Header(header_offset)
+        fits.PrimaryHDU(data=stars_background_im_offset, header=header_offset).writeto(fn,
+                                                                         output_verify='fix',
+                                                                         overwrite=True)
+        fcso = stars_background_im - stars_background_im_offset
+        noise = np.sqrt(stars_background_im)
+        fcso_noise_ratio = fcso/noise
+        return stars_background_im, stars_background_im_offset, fcso_noise_ratio
 
 results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in
@@ -48,6 +56,7 @@ results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
             (180.0, 0.1), (180.0, 1), (180.0, 2), (180.0, 3), (180.0, -1),
            ]
           }
+
 
 # value[0] is stars_background_im
 # let's determine the various percentiles: what's the 10%, 25%, etc. background

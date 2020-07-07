@@ -210,7 +210,7 @@ def make_turbulence_im(size, airy_radius=3.2, power=3, brightness=1):
 
     return turbulent_im
 
-def make_turbulent_starry_im(size, readnoise, bias, dark, exptime, nstars=None,
+def make_turbulent_starry_im(size, readnoise, bias, dark_rate, exptime, nstars=None,
                              sources=None, counts=10000, airy_radius=3.2, power=3,
                              skybackground=False, sky=20, hotpixels=False,
                              biascol=False, brightness=1, progressbar=False):
@@ -219,7 +219,7 @@ def make_turbulent_starry_im(size, readnoise, bias, dark, exptime, nstars=None,
                                       brightness=brightness)
 
     stars_background_im = make_stars_im(size=size, readnoise=readnoise,
-                                        bias=bias, dark=dark, exptime=exptime,
+                                        bias=bias, dark_rate=dark_rate, exptime=exptime,
                                         nstars=nstars, sources=sources,
                                         counts=counts, airy_radius=airy_radius,
                                         skybackground=skybackground, sky=sky,

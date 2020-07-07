@@ -1,6 +1,6 @@
 import numpy as np
 from astroquery.vizier import Vizier
-from astroquery.svo_fps import SvoFps
+#from astroquery.svo_fps import SvoFps
 from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
 from astropy import units as u
@@ -20,7 +20,7 @@ pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
 def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
-                     max_rows=int(4e5), kmag_threshold=8.5,
+                     max_rows=int(4e5), kmag_threshold=8.5, wavelength=1875,
                      imsize=2048, diameter=24*u.cm,
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                      transmission_fraction=0.70*0.75,
@@ -73,6 +73,8 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     zpt_vista = 669.5625*u.Jy
 
     fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt_vista
+    fluxes = functions.flux_function(hmag=cat2["Hmag3"], kmag=cat2['Ksmag3'], 
+                                     wavelength=wavelength, VVV=True)
     bad_vvv = (cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))
 
@@ -85,7 +87,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     nsrc = len(phot_ct_rate)
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table = Table({'amplitude': phot_ct,
+    source_table = Table({'amplitude': phot_ct * transmission_fraction,
                           'x_0': pix_coords_vvv[0][~bad_vvv],
                           'y_0': pix_coords_vvv[1][~bad_vvv],
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -99,9 +101,11 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     # filt_tbl = SvoFps.get_filter_list(facility='2MASS')
     # ks = filt_tbl[filt_tbl['filterID'] == b'2MASS/2MASS.Ks']
     # zpt = ks['ZeroPoint'].quantity
-    zpt_2mass = 666.8*u.Jy
+#    zpt_2mass = 666.8*u.Jy
 
-    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt_2mass
+#    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt_2mass
+    fluxes = functions.flux_function(hmag=cat2mass['Hmag'], kmag=cat2mass['Kmag'], 
+                                     wavelength=wavelength)
     bad_2mass = (cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |
                  (pix_coords_2mass[1] > imsize) | (~twomass_bright))
@@ -125,8 +129,8 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     source_table_both = table.vstack([source_table, source_table_2mass])
 
 
-    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0,
-                                              dark_rate=dark_rate, exptime=exptime.value,
+    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
+                                              dark_rate=dark_rate, exptime=exptime,
                                               nstars=None,
                                               sources=source_table_both,
                                               airy_radius=(airy_radius/pixscale).value,

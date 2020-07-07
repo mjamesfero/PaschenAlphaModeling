@@ -111,25 +111,28 @@ def make_model_sources_image_faster(shape, model, source_table,
     return image
 
 
-def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
-                      sources=None, counts=10000, fwhm=3.2,
-                      skybackground=False, sky=20, hotpixels=False,
-                      biascol=False, progressbar=False):
+def make_stars_im(size, readnoise=10*u.count, bias=0*u.count,
+                  dark_rate=1*u.count/u.s, exptime=1*u.s, nstars=None,
+                  sources=None, counts=10000, airy_radius=3.2, skybackground=False,
+                  sky=20, hotpixels=False, biascol=False, progressbar=False,
+                  seed=8392):
     """
     Parameters
     ----------
     size : int
         Size of the square image in pixels
-    readnoise : float
+    readnoise : quantity in counts
         Amplitude of the Gaussian readnoise to be added to the image
-    bias : float
+    bias : quantity in coutns
         Bias offset value
-    dark : float
-        Dark current rate in phot/s
+    dark_rate : quantity in count/s
+        Dark current rate
     exptime : float
         Integration time in seconds
     stars : None or int
         The number of random stars to create
+    airy_radius : float
+        airy_radius of the Airy function in *pixel* units
     sources : tbl
         A source table similar to that created by `make_random_gaussians_table`.
         Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
@@ -140,13 +143,13 @@ def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
     ##pretty much just copy paste and combined functions
     ##readnoise
     shape = blank_image.shape
-    noise = np.random.normal(scale=readnoise, size=shape)
+    noise = np.random.normal(scale=readnoise.decompose().value, size=shape)
     noise_im = blank_image + noise
     ##bias
-    bias_im = np.zeros_like(blank_image) + bias
+    bias_im = np.zeros_like(blank_image) + bias.decompose().value
     if biascol:
         number_of_colums = 5
-        rng = np.random.RandomState(seed=8392)  # 20180520
+        rng = np.random.RandomState(seed=seed)  # 20180520
         columns = rng.randint(0, shape[1], size=number_of_colums)
         col_pattern = rng.randint(0, int(0.1 * bias), size=shape[0])
         for c in columns:
@@ -154,7 +157,7 @@ def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
     ##readnoise and bias
     bias_noise_im = noise_im + bias_im
     ##dark current
-    base_current = dark * exptime
+    base_current = (dark_rate * exptime).to(u.count).value
     dark_im = np.random.poisson(base_current, size=shape)
     ##hot pixels
     if hotpixels:
@@ -171,22 +174,22 @@ def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
     if skybackground:
         sky_im = np.random.poisson(sky, size=[size, size])
         dark_bias_noise_im += sky_im
-    ##stars
-    flux_range = [counts/100, counts]
-    y_max, x_max = shape
-    xmean_range = [0.01 * x_max, 0.99 * x_max]
-    ymean_range = [0.01 * y_max, 0.99 * y_max]
-    xstddev_range = [1, 4]
-    ystddev_range = [1, 4]
-    model = models.AiryDisk2D(fwhm)
-    model.bounding_box = [(-5*fwhm, 5*fwhm), (-5*fwhm, 5*fwhm)]
-    params = dict([('amplitude', flux_range),
-                  ('x_mean', xmean_range),
-                  ('y_mean', ymean_range),
-                  ('x_stddev', xstddev_range),
-                  ('y_stddev', ystddev_range),
-                  ('theta', [0, 2*np.pi])])
+    ## simulated stars
+    model = models.AiryDisk2D(airy_radius)
+    model.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
     if sources is None and nstars is not None:
+        flux_range = [counts/100, counts]
+        y_max, x_max = shape
+        xmean_range = [0.01 * x_max, 0.99 * x_max]
+        ymean_range = [0.01 * y_max, 0.99 * y_max]
+        xstddev_range = [1, 4]
+        ystddev_range = [1, 4]
+        params = dict([('amplitude', flux_range),
+                      ('x_mean', xmean_range),
+                      ('y_mean', ymean_range),
+                      ('x_stddev', xstddev_range),
+                      ('y_stddev', ystddev_range),
+                      ('theta', [0, 2*np.pi])])
         sources = make_random_gaussians_table(nstars, params,
                                               random_state=12345)
     elif sources is None and nstars is None:
@@ -198,27 +201,27 @@ def make_stars_im(size, readnoise, bias, dark, exptime, nstars=None,
 
     return stars_background_im
 
-def make_turbulence_im(size, fwhm=3.2, power=3, brightness=1):
+def make_turbulence_im(size, airy_radius=3.2, power=3, brightness=1):
     ##turbulence
     turbulent_data = make_extended(size, power)
     min_val = np.min(turbulent_data)
     turbulence = (turbulent_data - min_val + 1)*brightness
-    turbulent_im = convolve(turbulence, AiryDisk2DKernel(fwhm), mode="same")
+    turbulent_im = convolve(turbulence, AiryDisk2DKernel(airy_radius), mode="same")
 
     return turbulent_im
 
 def make_turbulent_starry_im(size, readnoise, bias, dark, exptime, nstars=None,
-                             sources=None, counts=10000, fwhm=3.2, power=3,
+                             sources=None, counts=10000, airy_radius=3.2, power=3,
                              skybackground=False, sky=20, hotpixels=False,
                              biascol=False, brightness=1, progressbar=False):
 
-    turbulent_im = make_turbulence_im(size=size, fwhm=fwhm, power=power,
+    turbulent_im = make_turbulence_im(size=size, airy_radius=airy_radius, power=power,
                                       brightness=brightness)
 
     stars_background_im = make_stars_im(size=size, readnoise=readnoise,
                                         bias=bias, dark=dark, exptime=exptime,
                                         nstars=nstars, sources=sources,
-                                        counts=counts, fwhm=fwhm,
+                                        counts=counts, airy_radius=airy_radius,
                                         skybackground=skybackground, sky=sky,
                                         hotpixels=hotpixels, biascol=biascol,
                                         progressbar=progressbar)

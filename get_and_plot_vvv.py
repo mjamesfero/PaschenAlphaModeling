@@ -18,9 +18,11 @@ pa_wavelength = 1.8756*u.um
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
-def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
-                     exptime=500*u.s, max_rows=int(4e5), kmag_threshold=8.5,
+def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
+                     pixscale=0.806*u.arcsec, exptime=500*u.s,
+                     max_rows=int(4e5), kmag_threshold=8.5,
                      imsize=2048, diameter=24*u.cm,
+                     readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                     ):
 
     Viz = Vizier(row_limit=max_rows)
@@ -40,9 +42,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     twomass_bright = cat2mass['Kmag'] < kmag_threshold
 
 
-    fwhm = (1.22 * pa_wavelength / diameter).to(u.arcsec, u.dimensionless_angles())
-    pixscale = fwhm / 3
-    fov = pixscale * imsize
+    airy_radius = (1.22 * pa_wavelength / diameter).to(u.arcsec, u.dimensionless_angles())
     header = {'CRPIX1': imsize/2,
               'CRPIX2': imsize/2,
               'NAXIS1': imsize,
@@ -57,7 +57,9 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     target_image_wcs = wcs.WCS(header=header)
 
     collecting_area = np.pi*(diameter/2)**2
-    psf_area = 2*np.pi*(fwhm/(8*np.log(2)))**2
+    # empirically determined: the integral of the Airy function
+    airy_area_ratio = 8/3/np.pi
+    psf_area = airy_area_ratio*(airy_radius)**2
     pixel_fraction_of_area = (pixscale**2 / psf_area).decompose()
 
 
@@ -85,7 +87,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     source_table = Table({'amplitude': phot_ct,
                           'x_0': pix_coords_vvv[0][~bad_vvv],
                           'y_0': pix_coords_vvv[1][~bad_vvv],
-                          'radius': np.repeat(fwhm/pixscale, nsrc),
+                          'radius': np.repeat(airy_radius/pixscale, nsrc),
                          })
 
 
@@ -115,18 +117,18 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=25*u.arcmin,
     source_table_2mass = Table({'amplitude': phot_ct,
                                 'x_0': pix_coords_2mass[0][~bad_2mass],
                                 'y_0': pix_coords_2mass[1][~bad_2mass],
-                                'radius': np.repeat(fwhm/pixscale, nsrc),
+                                'radius': np.repeat(airy_radius/pixscale, nsrc),
                                })
 
 
     source_table_both = table.vstack([source_table, source_table_2mass])
 
 
-    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=0, bias=0,
-                                              dark=0, exptime=exptime.value,
+    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0,
+                                              dark_rate=dark_rate, exptime=exptime.value,
                                               nstars=None,
                                               sources=source_table_both,
-                                              fwhm=(fwhm/pixscale).value,
+                                              airy_radius=(airy_radius/pixscale).value,
                                               power=3, skybackground=False,
                                               sky=0, hotpixels=False,
                                               biascol=False, brightness=0,

@@ -141,4 +141,4 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     stars_background_im, turbulent_stars, turbulence = rslt
 
 
-    return stars_background_im, turbulent_stars, turbulence
+    return stars_background_im, turbulent_stars, turbulence, header

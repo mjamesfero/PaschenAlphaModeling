@@ -20,7 +20,7 @@ pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
 def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
-                     max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750,
+                     max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
                      imsize=2048, diameter=24*u.cm,
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                      transmission_fraction=0.70*0.75,
@@ -43,7 +43,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     twomass_bright = cat2mass['Kmag'] < kmag_threshold
 
 
-    airy_radius = (1.22 * pa_wavelength / diameter).to(u.arcsec, u.dimensionless_angles())
+    airy_radius = (1.22 * wavelength / diameter).to(u.arcsec, u.dimensionless_angles())
     header = {'CRPIX1': imsize/2,
               'CRPIX2': imsize/2,
               'NAXIS1': imsize,

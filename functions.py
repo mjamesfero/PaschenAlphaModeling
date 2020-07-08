@@ -231,7 +231,8 @@ def make_turbulent_starry_im(size, readnoise, bias, dark_rate, exptime, nstars=N
 
     return stars_background_im, turbulent_stars, turbulent_im
 
-def flux_function(hmag, kmag, wavelength=18750, VVV=False):
+def flux_function(hmag, kmag, wavelength=18750*u.AA, VVV=False):
+
     """
     Parameters
     ----------
@@ -246,15 +247,15 @@ def flux_function(hmag, kmag, wavelength=18750, VVV=False):
     """
 
     if VVV:
-        m_mag = (kmag - hmag)/(21527.6 - 16508.7)
-        Pamag = m_mag*(wavelength - 16508.7) + hmag
-        m_zpt = (672.6 - 1026.4)/(21527.6 - 16508.7)
-        zpt = (m_zpt*(wavelength - 16508.7) + 1026.4) * u.Jy
+        m_mag = (kmag - hmag)/u.Quantity(21527.6 - 16508.7, u.AA)
+        Pamag = m_mag*(wavelength - 16508.7*u.AA) + hmag
+        m_zpt = (672.6 - 1026.4)/u.Quantity(21527.6 - 16508.7, u.AA)
+        zpt = (m_zpt*(wavelength - 16508.7*u.AA) + 1026.4) * u.Jy
     else:
-        m_mag = (kmag - hmag)/(21590.0 - 16620.0)
-        Pamag = m_mag*(wavelength - 16620.0) + hmag
-        m_zpt = (666.8 - 1024.0)/(21590.0 - 16620.0)
-        zpt = (m_zpt*(wavelength - 16620.0) + 1024.0) * u.Jy
+        m_mag = (kmag - hmag)/u.Quantity(21590.0 - 16620.0, u.AA)
+        Pamag = m_mag*(wavelength - 16620.0*u.AA) + hmag
+        m_zpt = (666.8 - 1024.0)/u.Quantity(21590.0 - 16620.0, u.AA)
+        zpt = (m_zpt*(wavelength - 16620.0*u.AA) + 1024.0) * u.Jy
     flux_new = u.Quantity(10**(Pamag/ -2.5)) * zpt
     return flux_new
 

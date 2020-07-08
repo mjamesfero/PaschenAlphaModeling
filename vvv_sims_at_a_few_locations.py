@@ -12,13 +12,15 @@ import warnings
 warnings.filterwarnings(action='ignore', category=fits.verify.VerifyWarning)
 
 def trytoget(glon, glat, **kwargs):
-    fn = f"{glon:06.2f}{glat:+06.2f}.fits"
-    if os.path.exists(fn):
-        return fits.getdata(fn), 0, 0, fits.getheader(fn)
+    fn = f"{glon.value:06.2f}{glat.value:+06.2f}_pa_filter.fits"
+    offfn = f"{glon.value:06.2f}{glat.value:+06.2f}_off_filter.fits"
+    if os.path.exists(fn) and os.path.exists(offfn):
+        stars_background_im = fits.getdata(fn)
+        stars_background_im_offset = fits.getdata(offfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750, **kwargs)
-            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800, **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, wavelength=18750*u.AA, **kwargs)
+            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vvv(glon, glat, wavelength=18800*u.AA, **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)
@@ -27,13 +29,14 @@ def trytoget(glon, glat, **kwargs):
                                                                          output_verify='fix',
                                                                          overwrite=True)
         header_offset = fits.Header(header_offset)
-        fits.PrimaryHDU(data=stars_background_im_offset, header=header_offset).writeto(fn,
+        fits.PrimaryHDU(data=stars_background_im_offset, header=header_offset).writeto(offfn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
-        fcso = stars_background_im - stars_background_im_offset
-        noise = np.sqrt(stars_background_im)
-        fcso_noise_ratio = fcso/noise
-        return stars_background_im, stars_background_im_offset, fcso_noise_ratio
+
+    fcso = stars_background_im - stars_background_im_offset
+    noise = np.sqrt(stars_background_im)
+    fcso_noise_ratio = fcso/noise
+    return stars_background_im, stars_background_im_offset, fcso_noise_ratio
 
 results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in

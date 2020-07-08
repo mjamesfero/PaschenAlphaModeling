@@ -34,107 +34,110 @@ def trytoget(glon, glat, **kwargs):
                                                                          overwrite=True)
 
     fcso = stars_background_im - stars_background_im_offset
+    ignore = stars_background_im < 10
     noise = np.sqrt(stars_background_im)
+    noise[ignore] = np.nan
     fcso_noise_ratio = fcso/noise
     return stars_background_im, stars_background_im_offset, fcso_noise_ratio
 
-results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
-           for glon, glat in
-           [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
-            (-2.5, 0.1), (-2.5, 1), (-2.5, 2), (-2.5, 3), (-2.5, -1),
-            (-1.5, 0.1), (-1.5, 1), (-1.5, 2), (-1.5, 3), (-1.5, -1),
-            (1.5, 0.1), (1.5, 1), (1.5, 2), (1.5, 3), (1.5, -1),
-            (0, 0.1), (0, 1), (0, 2), (0, 3), (0, -1),
-            (5.0, 0.1), (5.0, 1), (5.0, 2), (5.0, 3), (5.0, -1),
-            (-5.0, 0.1), (-5.0, 1), (-5.0, 2), (-5.0, 3), (-5.0, -1),
-            (-10.0, 0.1), (-10.0, 1), (-10.0, 2), (-10.0, 3), (-10.0, -1),
-            (-20.0, 0.1), (-20.0, 1), (-20.0, 2), (-20.0, 3), (-20.0, -1),
-            (-30.0, 0.1), (-30.0, 1), (-30.0, 2), (-30.0, 3), (-30.0, -1),
-            (-40.0, 0.1), (-40.0, 1), (-40.0, 2), (-40.0, 3), (-40.0, -1),
-            (-50.0, 0.1), (-50.0, 1), (-50.0, 2), (-50.0, 3), (-50.0, -1),
-            (-60.0, 0.1), (-60.0, 1), (-60.0, 2), (-60.0, 3), (-60.0, -1),
-            (270.0, 0.1), (270.0, 1), (270.0, 2), (270.0, 3), (270.0, -1),
-            (240.0, 0.1), (240.0, 1), (240.0, 2), (240.0, 3), (240.0, -1),
-            (210.0, 0.1), (210.0, 1), (210.0, 2), (210.0, 3), (210.0, -1),
-            (180.0, 0.1), (180.0, 1), (180.0, 2), (180.0, 3), (180.0, -1),
-           ]
-          }
+if __name__ == "__main__":
+    results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
+               for glon, glat in
+               [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
+                (-2.5, 0.1), (-2.5, 1), (-2.5, 2), (-2.5, 3), (-2.5, -1),
+                (-1.5, 0.1), (-1.5, 1), (-1.5, 2), (-1.5, 3), (-1.5, -1),
+                (1.5, 0.1), (1.5, 1), (1.5, 2), (1.5, 3), (1.5, -1),
+                (0, 0.1), (0, 1), (0, 2), (0, 3), (0, -1),
+                (5.0, 0.1), (5.0, 1), (5.0, 2), (5.0, 3), (5.0, -1),
+                (-5.0, 0.1), (-5.0, 1), (-5.0, 2), (-5.0, 3), (-5.0, -1),
+                (-10.0, 0.1), (-10.0, 1), (-10.0, 2), (-10.0, 3), (-10.0, -1),
+                (-20.0, 0.1), (-20.0, 1), (-20.0, 2), (-20.0, 3), (-20.0, -1),
+                (-30.0, 0.1), (-30.0, 1), (-30.0, 2), (-30.0, 3), (-30.0, -1),
+                (-40.0, 0.1), (-40.0, 1), (-40.0, 2), (-40.0, 3), (-40.0, -1),
+                (-50.0, 0.1), (-50.0, 1), (-50.0, 2), (-50.0, 3), (-50.0, -1),
+                (-60.0, 0.1), (-60.0, 1), (-60.0, 2), (-60.0, 3), (-60.0, -1),
+                (270.0, 0.1), (270.0, 1), (270.0, 2), (270.0, 3), (270.0, -1),
+                (240.0, 0.1), (240.0, 1), (240.0, 2), (240.0, 3), (240.0, -1),
+                (210.0, 0.1), (210.0, 1), (210.0, 2), (210.0, 3), (210.0, -1),
+                (180.0, 0.1), (180.0, 1), (180.0, 2), (180.0, 3), (180.0, -1),
+               ]
+              }
 
 
-# value[0] is stars_background_im
-# let's determine the various percentiles: what's the 10%, 25%, etc. background
-# level?
-# "key" is glon,glat, which has to be stringified so we can save it below
-stats_background = {"{0}_{1}".format(*key):
-         {'glon': key[0],
-          'glat': key[1],
-          10: np.percentile(value[0], 10),
-          25: np.percentile(value[0], 25),
-          50: np.percentile(value[0], 50),
-          75: np.percentile(value[0], 75),
-          90: np.percentile(value[0], 90),
-          95: np.percentile(value[0], 95),
-          99: np.percentile(value[0], 99),
-         }
-         for key, value in results.items()
-         if not isinstance(value, str)
-        }
+    # value[0] is stars_background_im
+    # let's determine the various percentiles: what's the 10%, 25%, etc. background
+    # level?
+    # "key" is glon,glat, which has to be stringified so we can save it below
+    stats_background = {"{0}_{1}".format(*key):
+             {'glon': key[0],
+              'glat': key[1],
+              10: np.nanpercentile(value[0], 10),
+              25: np.nanpercentile(value[0], 25),
+              50: np.nanpercentile(value[0], 50),
+              75: np.nanpercentile(value[0], 75),
+              90: np.nanpercentile(value[0], 90),
+              95: np.nanpercentile(value[0], 95),
+              99: np.nanpercentile(value[0], 99),
+             }
+             for key, value in results.items()
+             if not isinstance(value, str)
+            }
 
-with open('background_percentiles.json', 'w') as fh:
-    json.dump(obj=stats_background, fp=fh)
+    with open('background_nanpercentiles.json', 'w') as fh:
+        json.dump(obj=stats_background, fp=fh)
 
-stats_offset = {"{0}_{1}".format(*key):
-         {'glon': key[0],
-          'glat': key[1],
-          10: np.percentile(value[1], 10),
-          25: np.percentile(value[1], 25),
-          50: np.percentile(value[1], 50),
-          75: np.percentile(value[1], 75),
-          90: np.percentile(value[1], 90),
-          95: np.percentile(value[1], 95),
-          99: np.percentile(value[1], 99),
-         }
-         for key, value in results.items()
-         if not isinstance(value, str)
-        }
+    stats_offset = {"{0}_{1}".format(*key):
+             {'glon': key[0],
+              'glat': key[1],
+              10: np.nanpercentile(value[1], 10),
+              25: np.nanpercentile(value[1], 25),
+              50: np.nanpercentile(value[1], 50),
+              75: np.nanpercentile(value[1], 75),
+              90: np.nanpercentile(value[1], 90),
+              95: np.nanpercentile(value[1], 95),
+              99: np.nanpercentile(value[1], 99),
+             }
+             for key, value in results.items()
+             if not isinstance(value, str)
+            }
 
-with open('background_percentiles_offset.json', 'w') as fh:
-    json.dump(obj=stats_offset, fp=fh)
+    with open('background_nanpercentiles_offset.json', 'w') as fh:
+        json.dump(obj=stats_offset, fp=fh)
 
-stats_fcso = {"{0}_{1}".format(*key):
-         {'glon': key[0],
-          'glat': key[1],
-          10: np.percentile(value[2], 10),
-          25: np.percentile(value[2], 25),
-          50: np.percentile(value[2], 50),
-          75: np.percentile(value[2], 75),
-          90: np.percentile(value[2], 90),
-          95: np.percentile(value[2], 95),
-          99: np.percentile(value[2], 99),
-         }
-         for key, value in results.items()
-         if not isinstance(value, str)
-        }
+    stats_fcso = {"{0}_{1}".format(*key):
+             {'glon': key[0],
+              'glat': key[1],
+              10: np.nanpercentile(value[2], 10),
+              25: np.nanpercentile(value[2], 25),
+              50: np.nanpercentile(value[2], 50),
+              75: np.nanpercentile(value[2], 75),
+              90: np.nanpercentile(value[2], 90),
+              95: np.nanpercentile(value[2], 95),
+              99: np.nanpercentile(value[2], 99),
+             }
+             for key, value in results.items()
+             if not isinstance(value, str)
+            }
 
-with open('fcso_percentiles.json', 'w') as fh:
-    json.dump(obj=stats_fcso, fp=fh)
-
-
-
-from astropy import visualization
-import pylab as pl
+    with open('fcso_nanpercentiles.json', 'w') as fh:
+        json.dump(obj=stats_fcso, fp=fh)
 
 
 
-glon = [x['glon'] for x in stats_background.values()]
-glat = [x['glat'] for x in stats_background.values()]
-med = [x['50'] for x in stats_background.values()]
+    from astropy import visualization
+    import pylab as pl
 
-pl.clf()
-pl.scatter(glon, glat, c=np.log10(np.array(med)/500), marker='s', s=200)
-cb = pl.colorbar()
-pl.xlabel("Galactic Longitude")
-pl.ylabel("Galactic Latitude")
-pl.xlim(pl.gca().get_xlim()[::-1])
-cb.set_label("Median Background in log counts/s")
-pl.savefig('median_background_level.pdf', bbox_inches='tight')
+
+
+    glon = [x['glon'] for x in stats_background.values()]
+    glat = [x['glat'] for x in stats_background.values()]
+    med = [x['50'] for x in stats_background.values()]
+
+    pl.clf()
+    pl.scatter(glon, glat, c=np.log10(np.array(med)/500), marker='s', s=200)
+    cb = pl.colorbar()
+    pl.xlabel("Galactic Longitude")
+    pl.ylabel("Galactic Latitude")
+    pl.xlim(pl.gca().get_xlim()[::-1])
+    cb.set_label("Median Background in log counts/s")
+    pl.savefig('median_background_level.pdf', bbox_inches='tight')

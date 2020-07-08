@@ -104,7 +104,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 #    zpt_2mass = 666.8*u.Jy
 
 #    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt_2mass
-    fluxes = functions.flux_function(hmag=cat2mass['Hmag'], kmag=cat2mass['Kmag'], 
+    fluxes = functions.flux_function(hmag=cat2mass['Hmag'], kmag=cat2mass['Kmag'],
                                      wavelength=wavelength)
     bad_2mass = (cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |

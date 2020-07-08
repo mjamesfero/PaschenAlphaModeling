@@ -70,3 +70,23 @@ stats = {"{0}_{1}".format(*key):
 
 with open('percentiles_by_glonglat.json', 'w') as fh:
     json.dump(obj=stats, fp=fh)
+
+
+
+from astropy import visualization
+import pylab as pl
+
+
+
+glon = [x['glon'] for x in stats.values()]
+glat = [x['glat'] for x in stats.values()]
+med = [x['50'] for x in stats.values()]
+
+pl.clf()
+pl.scatter(glon, glat, c=np.log10(np.array(med)/500), marker='s', s=200)
+cb = pl.colorbar()
+pl.xlabel("Galactic Longitude")
+pl.ylabel("Galactic Latitude")
+pl.xlim(pl.gca().get_xlim()[::-1])
+cb.set_label("Median Background in log counts/s")
+pl.savefig('median_background_level.pdf', bbox_inches='tight')

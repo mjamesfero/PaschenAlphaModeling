@@ -73,7 +73,7 @@ def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
  #   zpt_vista = 669.5625*u.Jy
 
 #    fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt_vista
-    fluxes = functions.flux_function(hmag=cat2["Hmag3"], kmag=cat2['Ksmag3'], 
+    fluxes = functions.flux_function(hmag=cat2["Hmag3"], kmag=cat2['Ksmag3'],
                                      wavelength=wavelength, VVV=True)
     bad_vvv = (cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))

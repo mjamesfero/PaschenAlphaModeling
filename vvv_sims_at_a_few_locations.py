@@ -62,7 +62,7 @@ results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
 # let's determine the various percentiles: what's the 10%, 25%, etc. background
 # level?
 # "key" is glon,glat, which has to be stringified so we can save it below
-stats = {"{0}_{1}".format(*key):
+stats_background = {"{0}_{1}".format(*key):
          {'glon': key[0],
           'glat': key[1],
           10: np.percentile(value[0], 10),
@@ -78,7 +78,7 @@ stats = {"{0}_{1}".format(*key):
         }
 
 with open('background_percentiles.json', 'w') as fh:
-    json.dump(obj=stats, fp=fh)
+    json.dump(obj=stats_background, fp=fh)
 
 stats_offset = {"{0}_{1}".format(*key):
          {'glon': key[0],
@@ -115,3 +115,23 @@ stats_fcso = {"{0}_{1}".format(*key):
 
 with open('fcso_percentiles.json', 'w') as fh:
     json.dump(obj=stats_fcso, fp=fh)
+
+
+
+from astropy import visualization
+import pylab as pl
+
+
+
+glon = [x['glon'] for x in stats.values()]
+glat = [x['glat'] for x in stats.values()]
+med = [x['50'] for x in stats.values()]
+
+pl.clf()
+pl.scatter(glon, glat, c=np.log10(np.array(med)/500), marker='s', s=200)
+cb = pl.colorbar()
+pl.xlabel("Galactic Longitude")
+pl.ylabel("Galactic Latitude")
+pl.xlim(pl.gca().get_xlim()[::-1])
+cb.set_label("Median Background in log counts/s")
+pl.savefig('median_background_level.pdf', bbox_inches='tight')

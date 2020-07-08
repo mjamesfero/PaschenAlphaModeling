@@ -17,7 +17,8 @@ def trytoget(glon, glat, **kwargs):
         return fits.getdata(fn), 0, 0, fits.getheader(fn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, wavelength=18750, **kwargs)
+            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vvv(glon, glat, wavelength=18800, **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)
@@ -25,7 +26,14 @@ def trytoget(glon, glat, **kwargs):
         fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
-        return stars_background_im
+        header_offset = fits.Header(header_offset)
+        fits.PrimaryHDU(data=stars_background_im_offset, header=header_offset).writeto(fn,
+                                                                         output_verify='fix',
+                                                                         overwrite=True)
+        fcso = stars_background_im - stars_background_im_offset
+        noise = np.sqrt(stars_background_im)
+        fcso_noise_ratio = fcso/noise
+        return stars_background_im, stars_background_im_offset, fcso_noise_ratio
 
 results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            for glon, glat in
@@ -49,11 +57,12 @@ results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
            ]
           }
 
+
 # value[0] is stars_background_im
 # let's determine the various percentiles: what's the 10%, 25%, etc. background
 # level?
 # "key" is glon,glat, which has to be stringified so we can save it below
-stats = {"{0}_{1}".format(*key):
+stats_background = {"{0}_{1}".format(*key):
          {'glon': key[0],
           'glat': key[1],
           10: np.percentile(value[0], 10),
@@ -68,8 +77,44 @@ stats = {"{0}_{1}".format(*key):
          if not isinstance(value, str)
         }
 
-with open('percentiles_by_glonglat.json', 'w') as fh:
-    json.dump(obj=stats, fp=fh)
+with open('background_percentiles.json', 'w') as fh:
+    json.dump(obj=stats_background, fp=fh)
+
+stats_offset = {"{0}_{1}".format(*key):
+         {'glon': key[0],
+          'glat': key[1],
+          10: np.percentile(value[1], 10),
+          25: np.percentile(value[1], 25),
+          50: np.percentile(value[1], 50),
+          75: np.percentile(value[1], 75),
+          90: np.percentile(value[1], 90),
+          95: np.percentile(value[1], 95),
+          99: np.percentile(value[1], 99),
+         }
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
+
+with open('background_percentiles_offset.json', 'w') as fh:
+    json.dump(obj=stats_offset, fp=fh)
+
+stats_fcso = {"{0}_{1}".format(*key):
+         {'glon': key[0],
+          'glat': key[1],
+          10: np.percentile(value[2], 10),
+          25: np.percentile(value[2], 25),
+          50: np.percentile(value[2], 50),
+          75: np.percentile(value[2], 75),
+          90: np.percentile(value[2], 90),
+          95: np.percentile(value[2], 95),
+          99: np.percentile(value[2], 99),
+         }
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
+
+with open('fcso_percentiles.json', 'w') as fh:
+    json.dump(obj=stats_fcso, fp=fh)
 
 
 

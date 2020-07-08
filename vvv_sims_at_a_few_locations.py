@@ -77,5 +77,41 @@ stats = {"{0}_{1}".format(*key):
          if not isinstance(value, str)
         }
 
-with open('percentiles_by_glonglat.json', 'w') as fh:
+with open('background_percentiles.json', 'w') as fh:
     json.dump(obj=stats, fp=fh)
+
+stats_offset = {"{0}_{1}".format(*key):
+         {'glon': key[0],
+          'glat': key[1],
+          10: np.percentile(value[1], 10),
+          25: np.percentile(value[1], 25),
+          50: np.percentile(value[1], 50),
+          75: np.percentile(value[1], 75),
+          90: np.percentile(value[1], 90),
+          95: np.percentile(value[1], 95),
+          99: np.percentile(value[1], 99),
+         }
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
+
+with open('background_percentiles_offset.json', 'w') as fh:
+    json.dump(obj=stats_offset, fp=fh)
+
+stats_fcso = {"{0}_{1}".format(*key):
+         {'glon': key[0],
+          'glat': key[1],
+          10: np.percentile(value[2], 10),
+          25: np.percentile(value[2], 25),
+          50: np.percentile(value[2], 50),
+          75: np.percentile(value[2], 75),
+          90: np.percentile(value[2], 90),
+          95: np.percentile(value[2], 95),
+          99: np.percentile(value[2], 99),
+         }
+         for key, value in results.items()
+         if not isinstance(value, str)
+        }
+
+with open('fcso_percentiles.json', 'w') as fh:
+    json.dump(obj=stats_fcso, fp=fh)

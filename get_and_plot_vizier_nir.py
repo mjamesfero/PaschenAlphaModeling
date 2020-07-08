@@ -72,10 +72,10 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     # zpt = ks['ZeroPoint'].quantity
  #   zpt_vista = 669.5625*u.Jy
 
-#    fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt_vista
+    # fluxes = u.Quantity(10**(cat2['Ksmag3'] / -2.5)) * zpt_vista
     fluxes = functions.flux_function(hmag=cat2["Hmag3"], kmag=cat2['Ksmag3'],
                                      wavelength=wavelength, VVV=True)
-    bad_vvv = (cat2['Ksmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
+    bad_vvv = (cat2['Ksmag3'].mask | cat2['Hmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))
 
     phot_fluxes = fluxes[~bad_vvv] / pa_energy * u.photon
@@ -106,7 +106,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 #    fluxes = u.Quantity(10**(cat2mass['Kmag'] / -2.5)) * zpt_2mass
     fluxes = functions.flux_function(hmag=cat2mass['Hmag'], kmag=cat2mass['Kmag'],
                                      wavelength=wavelength)
-    bad_2mass = (cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
+    bad_2mass = (cat2mass['Hmag'].mask | cat2mass['Kmag'].mask | (pix_coords_2mass[0] < 0) |
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |
                  (pix_coords_2mass[1] > imsize) | (~twomass_bright))
 

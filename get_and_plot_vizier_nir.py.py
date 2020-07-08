@@ -18,7 +18,7 @@ pa_wavelength = 1.8756*u.um
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
-def get_and_plot_vvv(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
+def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
                      max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750,
                      imsize=2048, diameter=24*u.cm,

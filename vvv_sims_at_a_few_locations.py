@@ -6,7 +6,7 @@ from astropy.io import fits
 
 import json
 
-from get_and_plot_vvv import get_and_plot_vvv
+from get_and_plot_vizier_nir import get_and_plot_vizier_nir
 
 import warnings
 warnings.filterwarnings(action='ignore', category=fits.verify.VerifyWarning)
@@ -17,8 +17,8 @@ def trytoget(glon, glat, **kwargs):
         return fits.getdata(fn), 0, 0, fits.getheader(fn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vvv(glon, glat, wavelength=18750, **kwargs)
-            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vvv(glon, glat, wavelength=18800, **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750, **kwargs)
+            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800, **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)

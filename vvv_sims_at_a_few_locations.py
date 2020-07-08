@@ -12,8 +12,8 @@ import warnings
 warnings.filterwarnings(action='ignore', category=fits.verify.VerifyWarning)
 
 def trytoget(glon, glat, **kwargs):
-    fn = f"{glon:06.2f}{glat:+06.2f}_pa_filter.fits"
-    offfn = f"{glon:06.2f}{glat:+06.2f}_off_filter.fits"
+    fn = f"{glon.value:06.2f}{glat.value:+06.2f}_pa_filter.fits"
+    offfn = f"{glon.value:06.2f}{glat.value:+06.2f}_off_filter.fits"
     if os.path.exists(fn) and os.path.exists(offfn):
         stars_background_im = fits.getdata(fn)
         stars_background_im_offset = fits.getdata(offfn)

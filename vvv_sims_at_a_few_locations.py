@@ -131,7 +131,7 @@ if __name__ == "__main__":
 
     glon = [x['glon'] for x in stats_background.values()]
     glat = [x['glat'] for x in stats_background.values()]
-    med = [x['50'] for x in stats_background.values()]
+    med = [x[50] for x in stats_background.values()]
 
     pl.clf()
     pl.scatter(glon, glat, c=np.log10(np.array(med)/500), marker='s', s=200)

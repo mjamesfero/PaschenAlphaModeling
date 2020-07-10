@@ -259,6 +259,53 @@ def flux_function(hmag, kmag, wavelength=18750*u.AA, VVV=False):
     flux_new = u.Quantity(10**(Pamag/ -2.5)) * zpt
     return flux_new
 
+#lagrange interpolation formula. might give a better fit.
+def flux_lagrange(jmag, hmag, kmag, zmag=1, ymag=1, wavelength=18750,
+                  VVV=False):
+
+    """
+    Parameters
+    ----------
+    wavelength : float
+        Desired wavelength in Angstroms
+    zmag : float
+        Given star's Z magnitude
+    ymag : float
+        Given star's Y magnitude
+    jmag : float
+        Given star's J magnitude
+    hmag : float
+        Given star's H magnitude
+    kmag : float
+        Given star's Ks magnitude
+    VVV : Boolean
+        Whether the star is from the VVV catalogs or 2MASS catalogs
+    """
+    wave_len = wavelength
+    if VVV:
+        c0 = (wave_len - 8790.1)
+        c1 = (wave_len - 10219.7)
+        c2 = (wave_len - 12562.1)
+        c3 = (wave_len - 16508.7)
+        c4 = (wave_len - 21527.6)
+        f0 = [c1*c2*c3*c4]/[(8790.1 - 10219.7)*(8790.1 - 12562.1)*(8790.1 - 16508.7)*(8790.1 - 21527.6)]
+        f1 = [c0*c2*c3*c4]/[(10219.7 - 8790.1)*(10219.7 - 12562.1)*(10219.7 - 16508.7)*(10219.7 - 21527.6)]
+        f2 = [c0*c1*c3*c4]/[(12562.1 - 10219.7)*(12562.1 - 8790.1)*(12562.1 - 16508.7)*(12562.1 - 21527.6)]
+        f3 = [c0*c1*c2*c4]/[(16508.7 - 10219.7)*(16508.7 - 12562.1)*(16508.7 - 8790.1)*(16508.7 - 21527.6)]
+        f4 = [c0*c1*c2*c3]/[(21527.6 - 10219.7)*(21527.6 - 12562.1)*(21527.6 - 16508.7)*(21527.6 - 8790.1)]
+        new_mag = zmag*f0 + ymag*f1 + jmag*f2 + hmag*f3 + kmag*f4
+        zpt = (2264.1*f0 + 2085.3*f1 + 1549.8*f2 + 1026.4*f3 + 672.6*f4)*u.Jy
+    else:
+        c2 = (wave_len - 12350.0)
+        c3 = (wave_len - 16620.0)
+        c4 = (wave_len - 21590.0)
+        f2 = [c3*c4]/[(12350.0 - 16620.0)*(12350.0 - 21590.0)]
+        f3 = [c2*c4]/[(16620.0 - 12350.0)*(16620.0 - 21590.0)]
+        f4 = [c2*c3]/[(21590.0 - 12350.0)*(21590.0 - 16620.0)]
+        new_mag = jmag*f2 + hmag*f3 + kmag*f4
+        zpt = (1594.0*f2 + 1024.0*f3 + 666.8*f4)*u.Jy
+    flux_new = u.Quantity(10**(new_mag/ -2.5)) * zpt
+    return flux_new
 
 
 

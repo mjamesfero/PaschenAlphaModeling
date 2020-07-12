@@ -21,7 +21,7 @@ pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
                      max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
-                     imsize=2048, diameter=24*u.cm,
+                     imsize=2048, diameter=24*u.cm, brightness=0, 
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                      transmission_fraction=0.70*0.75,
                     ):
@@ -136,7 +136,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                                               airy_radius=(airy_radius/pixscale).value,
                                               power=3, skybackground=False,
                                               sky=0, hotpixels=False,
-                                              biascol=False, brightness=0,
+                                              biascol=False, brightness=brightness,
                                               progressbar=ProgressBar)
     stars_background_im, turbulent_stars, turbulence = rslt
 

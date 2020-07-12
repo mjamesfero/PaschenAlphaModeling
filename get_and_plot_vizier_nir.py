@@ -18,6 +18,7 @@ pa_wavelength = 1.8756*u.um
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
+
 def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
                      max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
@@ -25,6 +26,16 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                      transmission_fraction=0.70*0.75,
                     ):
+    """
+    Dark current / readnoise:
+    Pessimistic case is 0.435 ct/s, 22 ct
+    Optimistic case is 0.0123 ct/s, 6.2 ct
+
+    In surface brightness, these are (for exptime=500s):
+
+    dark_rn_pess = (((22*u.ph/(500*u.s) + 0.435*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
+    dark_rn_opt = (((6.2*u.ph/(500*u.s) + 0.0123*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
+    """
 
     Viz = Vizier(row_limit=max_rows)
     cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),

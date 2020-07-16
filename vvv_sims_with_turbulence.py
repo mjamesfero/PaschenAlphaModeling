@@ -26,7 +26,7 @@ def trytoget(glon, glat, **kwargs):
             print(ex)
             return str(ex)
         header = fits.Header(header)
-        fits.PrimaryHDU(data=sturbulent_stars, header=header).writeto(fn,
+        fits.PrimaryHDU(data=turbulent_stars, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
         header_offset = fits.Header(header_offset)
@@ -38,8 +38,16 @@ def trytoget(glon, glat, **kwargs):
     poisson_noise = np.sqrt(turbulent_stars + stars_background_im_offset)
     systematic_noise = mad_std(fcso)
     total_noise = np.sqrt(poisson_noise**2 + systematic_noise**2)
+    snr = mp.abs(fcso)/total_noise
 
-    return turbulent_stars, stars_background_im_offset, total_noise
+    fcso2 = stars_background_im - stars_background_im_offset
+    poisson_noise2 = np.sqrt(stars_background_im + stars_background_im_offset)
+    systematic_noise2 = mad_std(fcso2)
+    noise_no_turbulence = np.sqrt(poisson_noise2**2 + systematic_noise2**2)
+    SNR = mp.abs(fcso2)/noise_no_turbulence
+
+
+    return turbulent_stars, stars_background_im_offset, total_noise, snr, noise_no_turbulence, SNR
 
 if __name__ == "__main__":
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)

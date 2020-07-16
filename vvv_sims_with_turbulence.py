@@ -3,6 +3,7 @@ import os
 
 from astropy import units as u
 from astropy.io import fits
+from astropy.stats import mad_std
 
 import json
 
@@ -25,7 +26,7 @@ def trytoget(glon, glat, **kwargs):
             print(ex)
             return str(ex)
         header = fits.Header(header)
-        fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
+        fits.PrimaryHDU(data=sturbulent_stars, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
         header_offset = fits.Header(header_offset)
@@ -33,12 +34,12 @@ def trytoget(glon, glat, **kwargs):
                                                                          output_verify='fix',
                                                                          overwrite=True)
 
-    fcso = stars_background_im - stars_background_im_offset
-    ignore = stars_background_im < 10
-    noise = np.sqrt(stars_background_im)
-    noise[ignore] = np.nan
-    fcso_noise_ratio = fcso/noise
-    return stars_background_im, stars_background_im_offset, fcso_noise_ratio
+    fcso = turbulent_stars - stars_background_im_offset
+    poisson_noise = np.sqrt(turbulent_stars + stars_background_im_offset)
+    systematic_noise = mad_std(fcso)
+    total_noise = np.sqrt(poisson_noise**2 + systematic_noise**2)
+
+    return turbulent_stars, stars_background_im_offset, total_noise
 
 if __name__ == "__main__":
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)

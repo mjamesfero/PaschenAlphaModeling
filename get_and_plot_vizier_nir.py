@@ -23,8 +23,9 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
                      max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
                      imsize=2048, diameter=24*u.cm, brightness=0, 
+                     region='W51-CBAND-feathered.fits', 
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
-                     transmission_fraction=0.70*0.75,
+                     transmission_fraction=0.70*0.75, hii=False
                     ):
     """
     Dark current / readnoise:
@@ -139,8 +140,18 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     source_table_both = table.vstack([source_table, source_table_2mass])
 
-
-    rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
+    if hii:
+      rslt = functions.make_HII_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
+                                              dark_rate=dark_rate, exptime=exptime,
+                                              region = region, nstars=None, fov=fov*u.arcmin,
+                                              sources=source_table_both,
+                                              airy_radius=(airy_radius/pixscale).value,
+                                              power=3, skybackground=False,
+                                              sky=0, hotpixels=False,
+                                              biascol=False, progressbar=ProgressBar)
+      stars_background_im, turbulent_stars, turbulence = rslt
+    else:
+      rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
                                               dark_rate=dark_rate, exptime=exptime,
                                               nstars=None,
                                               sources=source_table_both,
@@ -149,7 +160,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                                               sky=0, hotpixels=False,
                                               biascol=False, brightness=brightness,
                                               progressbar=ProgressBar)
-    stars_background_im, turbulent_stars, turbulence = rslt
+      stars_background_im, turbulent_stars, turbulence = rslt
 
 
     return stars_background_im, turbulent_stars, turbulence, header

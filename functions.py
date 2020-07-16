@@ -8,6 +8,8 @@ from photutils.datasets import make_random_gaussians_table, make_model_sources_i
 from scipy.signal import convolve
 from turbustat.simulator import make_extended
 import astropy.coordinates as coord
+from radio_beam import Beam
+from astropy.io import fits
 import astropy.units as u
 import numpy as np
 
@@ -229,7 +231,60 @@ def make_turbulent_starry_im(size, readnoise, bias, dark_rate, exptime, nstars=N
     ##turbulent image with stars
     turbulent_stars = turbulent_im + stars_background_im
 
-    return stars_background_im, turbulent_stars, turbulent_im
+    return stars_background_im, turbulent_stars, turbulent_im    
+
+def add_HII_region(region='W51-CBAND-feathered.fits', fov=27.5*u.arcmin*u.arcmin, 
+                   airy_radius=3.2, power=3):
+    
+    header_HII = fits.getheader(region)  
+    data_HII = fits.getdata(region)  
+    HII_region = Beam.from_fits_header(header_HII) 
+
+    size1 = header_HII["NAXIS1"]
+    size2 = header_HII["NAXIS2"]
+
+    fwhm_axis = header_HII["BMAJ"]*u.deg
+    fwhm = fwhm_axis.to(u.arcsec)
+    fwhm_to_sigma = 1. / (8 * np.log(2))**0.5
+    beam_sigma = fwhm * fwhm_to_sigma
+    omega_B = 2 * np.pi * beam_sigma**2
+    S_PaA = 117*(data_HII*u.Jy/u.beam).to(u.MJy/u.sr, equivalencies=u.beam_angular_area(omega_B)) 
+
+    area1 = fov.to(u.rad*u.rad)
+    area = area1.to(u.sr)
+    surface = S_PaA * area
+    surface_brightness = (surface).reshape((size1, size2))
+
+    hii_region = convolve(surface_brightness, AiryDisk2DKernel(airy_radius), mode="same")*u.MJy
+
+    return hii_region
+
+def make_HII_starry_im(readnoise, bias, dark_rate, exptime, size=2048, 
+                             region='W51-CBAND-feathered.fits', 
+                             nstars=None, fov=27.5*u.arcmin*u.arcmin, 
+                             sources=None, counts=10000, airy_radius=3.2, power=3,
+                             skybackground=False, sky=20, hotpixels=False,
+                             biascol=False, progressbar=False):
+
+    hii_im = add_HII_region(region=region, fov=fov,  
+                            airy_radius=airy_radius, power=power)
+
+    stars_background_im = make_stars_im(size=size, readnoise=readnoise,
+                                        bias=bias, dark_rate=dark_rate, exptime=exptime,
+                                        nstars=nstars, sources=sources,
+                                        counts=counts, airy_radius=airy_radius,
+                                        skybackground=skybackground, sky=sky,
+                                        hotpixels=hotpixels, biascol=biascol,
+                                        progressbar=progressbar)
+    stars_background = stars_background_im*u.Jy
+    no_hii = stars_background.to(u.MJy)
+
+    ##turbulent image with stars
+    hii_stars = hii_im + no_hii
+
+    return no_hii, hii_stars, hii_im
+
+
 
 def flux_function(hmag, kmag, wavelength=18750*u.AA, VVV=False):
 

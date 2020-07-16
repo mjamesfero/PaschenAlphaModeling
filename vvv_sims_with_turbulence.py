@@ -19,7 +19,7 @@ def trytoget(glon, glat, **kwargs):
         stars_background_im_offset = fits.getdata(offfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=5*(10**4) **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=2.5*(10**4) **kwargs)
             stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800*u.AA, **kwargs)
         except Exception as ex:
             print(ex)

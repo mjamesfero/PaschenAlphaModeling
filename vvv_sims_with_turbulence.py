@@ -20,7 +20,7 @@ def trytoget(glon, glat, **kwargs):
         stars_background_im_offset = fits.getdata(offfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=2.5*(10**4) **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=2.5*(10**2) **kwargs)
             stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800*u.AA, **kwargs)
         except Exception as ex:
             print(ex)
@@ -40,14 +40,16 @@ def trytoget(glon, glat, **kwargs):
     total_noise = np.sqrt(poisson_noise**2 + systematic_noise**2)
     snr = mp.abs(fcso)/total_noise
 
+
     fcso2 = stars_background_im - stars_background_im_offset
     poisson_noise2 = np.sqrt(stars_background_im + stars_background_im_offset)
     systematic_noise2 = mad_std(fcso2)
     noise_no_turbulence = np.sqrt(poisson_noise2**2 + systematic_noise2**2)
     SNR = mp.abs(fcso2)/noise_no_turbulence
+    greater_than = np.count_nonzero(np.abs(SNR) > 1)/(2048**2)
 
 
-    return turbulent_stars, stars_background_im_offset, total_noise, snr, noise_no_turbulence, SNR
+    return turbulent_stars, stars_background_im_offset, total_noise, snr, noise_no_turbulence, greater_than
 
 if __name__ == "__main__":
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)

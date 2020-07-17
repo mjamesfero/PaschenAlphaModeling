@@ -38,7 +38,7 @@ def trytoget(glon, glat, **kwargs):
     poisson_noise = np.sqrt(stars_background_im + stars_background_im_offset)
     systematic_noise = mad_std(fcso)
     noise_no_turbulence = np.sqrt(poisson_noise**2 + systematic_noise**2)
-    SNR = np.abs(fcso2)/noise_no_turbulence
+    SNR = np.abs(fcso)/noise_no_turbulence
     greater_than = np.count_nonzero(np.abs(SNR) > 1)/(2048**2)
 
     return stars_background_im, stars_background_im_offset, noise_no_turbulence, greater_than

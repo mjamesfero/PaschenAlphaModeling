@@ -38,10 +38,10 @@ def trytoget(glon, glat, **kwargs):
     poisson_noise = np.sqrt(stars_background_im + stars_background_im_offset)
     systematic_noise = mad_std(fcso)
     noise_no_turbulence = np.sqrt(poisson_noise**2 + systematic_noise**2)
-    SNR = mp.abs(fcso2)/noise_no_turbulence
+    SNR = np.abs(fcso2)/noise_no_turbulence
     greater_than = np.count_nonzero(np.abs(SNR) > 1)/(2048**2)
 
-    return stars_background_im, stars_background_im_offset, SNR, greater_than
+    return stars_background_im, stars_background_im_offset, noise_no_turbulence, greater_than
 
 if __name__ == "__main__":
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
@@ -125,6 +125,23 @@ if __name__ == "__main__":
     with open('fcso_nanpercentiles.json', 'w') as fh:
         json.dump(obj=stats_fcso, fp=fh)
 
+    percentage_fcso = {"{0}_{1}".format(*key):
+             {'glon': key[0],
+              'glat': key[1],
+              10: np.nanpercentile(value[3], 10),
+              25: np.nanpercentile(value[3], 25),
+              50: np.nanpercentile(value[3], 50),
+              75: np.nanpercentile(value[3], 75),
+              90: np.nanpercentile(value[3], 90),
+              95: np.nanpercentile(value[3], 95),
+              99: np.nanpercentile(value[3], 99),
+             }
+             for key, value in results.items()
+             if not isinstance(value, str)
+            }
+
+    with open('fcso_nanpercentiles.json', 'w') as fh:
+        json.dump(obj=stats_fcso, fp=fh)
 
 
     from astropy import visualization

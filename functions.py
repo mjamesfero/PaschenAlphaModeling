@@ -15,7 +15,9 @@ import numpy as np
 
 plt.rcParams['image.origin'] = 'lower'
 
-def make_model_sources_image_faster(shape, model, source_table,
+plt.rcParams['image.origin'] = 'lower'
+
+def make_model_sources_image_faster(shape, airy_radius, source_table,
                                     bbox_size=5,
                                     progressbar=False):
     """
@@ -76,39 +78,70 @@ def make_model_sources_image_faster(shape, model, source_table,
         data = make_model_sources_image(shape, model, sources)
         plt.imshow(data)
     """
+    #needed: to have each model=convolve have [souces] in it 
+    #while still doing everything else
+    #models = for ii in len(source_table):
+    #            convolve_models(models.Gaussian2D(source_table['amplitude_0'][ii], 
+    #                                        source_table['x_mean_0'][ii], 
+    #                                        source_table['y_mean_0'][ii],
+    #                                        source_table['x_stddev_0'][ii],
+    #                                        source_table['y_stddev_0'][ii],
+    #                                        source_table['theta_0'][ii]), 
+    #                        models.AiryDisk2D(source_table['amplitude_1'][ii],
+    #                                        source_table['x_0_1'][ii],
+    #                                        source_table['y_0_1'][ii],
+    #                                        source_table['theta_0'][ii]))
+
+    model1 = models.Gaussian2D()
+    model2 = models.AiryDisk2D(airy_radius)
+    #model2.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
 
     image = np.zeros(shape, dtype=np.float64)
     yidx, xidx = np.indices(shape)
 
-    params_to_set = []
+    params_to_set1 = []
     for param in source_table.colnames:
-        if param in model.param_names:
-            params_to_set.append(param)
+        if param in model1.param_names:
+            params_to_set1.append(param)
+
+    params_to_set2 = []
+    for param in source_table.colnames:
+        if param in model2.param_names:
+            params_to_set2.append(param)
 
     # Save the initial parameter values so we can set them back when
     # done with the loop.  It's best not to copy a model, because some
     # models (e.g. PSF models) may have substantial amounts of data in
     # them.
-    init_params = {param: getattr(model, param) for param in params_to_set}
+
+    init_params1 = {param: getattr(model1, param) for param in params_to_set1}
+    init_params2 = {param: getattr(model2, param) for param in params_to_set2}
 
     if not progressbar:
         progressbar = lambda x: x
 
     try:
         for source in progressbar(source_table):
-            for param in params_to_set:
-                setattr(model, param, source[param])
+            for param in params_to_set1:
+                setattr(model1, param, source[param])
+
+            for param in params_to_set2:
+                setattr(model2, param, source[param])
 
             # ONLY applies to airy!
-            model.bounding_box = [(model.y_0-bbox_size*model.radius,
-                                   model.y_0+bbox_size*model.radius),
-                                  (model.x_0-bbox_size*model.radius,
-                                   model.x_0+bbox_size*model.radius)]
+            #model2.bounding_box = [(model2.y_0-bbox_size*model2.radius,
+            #                       model2.y_0+bbox_size*model2.radius),
+            #                      (model2.x_0-bbox_size*model2.radius,
+            #                       model2.x_0+bbox_size*model2.radius)]
+
+            model = convolve_models(model1, model2)
 
             model.render(image)
     finally:
-        for param, value in init_params.items():
-            setattr(model, param, value)
+        for param, value in init_params1.items():
+            setattr(model1, param, value)
+        for param, value in init_params2.items():
+            setattr(model2, param, value)
 
     return image
 
@@ -177,8 +210,7 @@ def make_stars_im(size, readnoise=10*u.count, bias=0*u.count,
         sky_im = np.random.poisson(sky, size=[size, size])
         dark_bias_noise_im += sky_im
     ## simulated stars
-    model = models.AiryDisk2D(airy_radius)
-    model.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
+    
     if sources is None and nstars is not None:
         flux_range = [counts/100, counts]
         y_max, x_max = shape
@@ -196,8 +228,10 @@ def make_stars_im(size, readnoise=10*u.count, bias=0*u.count,
                                               random_state=12345)
     elif sources is None and nstars is None:
         raise ValueError("Must specify either nstars or sources")
-    star_im = make_model_sources_image_faster(shape, model, sources,
+    
+    star_im = make_model_sources_image_faster(shape, airy_radius, sources,
                                               progressbar=progressbar)
+    #star_im = convolve(stars_alone, Gaussian2DKernel(sources['x_stddev'], sources['y_stddev'], sources['theta']), mode="same")
     ##stars and background
     stars_background_im = star_im + dark_bias_noise_im
 

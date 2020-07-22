@@ -140,8 +140,8 @@ if __name__ == "__main__":
              if not isinstance(value, str)
             }
 
-    with open('fcso_nanpercentiles.json', 'w') as fh:
-        json.dump(obj=stats_fcso, fp=fh)
+    with open('fcso_nanpercentiles_snr.json', 'w') as fh:
+        json.dump(obj=percentage_fcso, fp=fh)
 
 
     from astropy import visualization

@@ -102,8 +102,8 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     y = pix_coords_vvv[1][~bad_vvv]
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table = Table({'amplitude': phot_ct * transmission_fraction,
-                          'x_mean': x,
-                          'y_mean': y,
+                          'x_mean': np.repeat(0, nsrc),
+                          'y_mean': np.repeat(0, nsrc),
                           'x_0': x,
                           'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -141,8 +141,8 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     y = pix_coords_2mass[1][~bad_2mass]
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
-                                'x_mean': x,
-                                'y_mean': y,
+                                'x_mean': np.repeat(0, nsrc),
+                                'y_mean': np.repeat(0, nsrc),
                                 'x_0': x,
                                 'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),

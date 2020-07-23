@@ -90,8 +90,8 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
     #                                        source_table['y_0_1'][ii],
     #                                        source_table['theta_0'][ii]))
 
-    model1 = models.Gaussian2D()
-    model2 = models.AiryDisk2D(airy_radius)
+    model1 = models.AiryDisk2D(airy_radius)
+    model2 = models.Gaussian2D()
     #model2.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
 
     image = np.zeros(shape, dtype=np.float64)
@@ -128,10 +128,10 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
 
             # ONLY applies to airy!
             model = convolve_models(model1, model2)
-            model.bounding_box = [(model2.y_0-bbox_size*model2.radius,
-                                   model2.y_0+bbox_size*model2.radius),
-                                  (model2.x_0-bbox_size*model2.radius,
-                                   model2.x_0+bbox_size*model2.radius)]
+            model.bounding_box = [(model1.y_0-bbox_size*model1.radius,
+                                   model1.y_0+bbox_size*model1.radius),
+                                  (model1.x_0-bbox_size*model1.radius,
+                                   model1.x_0+bbox_size*model1.radius)]
 
 
             model.render(image)

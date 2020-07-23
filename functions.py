@@ -135,9 +135,7 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
 
 
             model.render(image)
-            import pdb; pdb.set_trace()
-            plt.figure(figsize=(20,20))
-			plt.imshow(image, vmax=400)
+
     finally:
         for param, value in init_params1.items():
             setattr(model1, param, value)

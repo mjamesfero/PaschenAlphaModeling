@@ -1,4 +1,4 @@
-from astropy.convolution import AiryDisk2DKernel
+from astropy.convolution import AiryDisk2DKernel, Gaussian2DKernel, convolve_models
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.modeling import models
@@ -15,10 +15,8 @@ import numpy as np
 
 plt.rcParams['image.origin'] = 'lower'
 
-plt.rcParams['image.origin'] = 'lower'
-
 def make_model_sources_image_faster(shape, airy_radius, source_table,
-                                    bbox_size=5,
+                                    bbox_size=10,
                                     progressbar=False):
     """
     Make an image containing sources generated from a user-specified
@@ -129,14 +127,17 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
                 setattr(model2, param, source[param])
 
             # ONLY applies to airy!
-            #model2.bounding_box = [(model2.y_0-bbox_size*model2.radius,
-            #                       model2.y_0+bbox_size*model2.radius),
-            #                      (model2.x_0-bbox_size*model2.radius,
-            #                       model2.x_0+bbox_size*model2.radius)]
-
             model = convolve_models(model1, model2)
+            model.bounding_box = [(model2.y_0-bbox_size*model2.radius,
+                                   model2.y_0+bbox_size*model2.radius),
+                                  (model2.x_0-bbox_size*model2.radius,
+                                   model2.x_0+bbox_size*model2.radius)]
+
 
             model.render(image)
+            import pdb; pdb.set_trace()
+            plt.figure(figsize=(20,20))
+			plt.imshow(image, vmax=400)
     finally:
         for param, value in init_params1.items():
             setattr(model1, param, value)

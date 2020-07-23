@@ -97,12 +97,19 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     phot_ct = (phot_ct_rate * exptime).to(u.ph).value
 
     nsrc = len(phot_ct_rate)
-
+    
+    x = pix_coords_vvv[0][~bad_vvv]
+    y = pix_coords_vvv[1][~bad_vvv]
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table = Table({'amplitude': phot_ct * transmission_fraction,
-                          'x_0': pix_coords_vvv[0][~bad_vvv],
-                          'y_0': pix_coords_vvv[1][~bad_vvv],
+                          'x_mean': x,
+                          'y_mean': y,
+                          'x_0': x,
+                          'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
+                          'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+                          'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y - 1024)/4096),
+                          'theta' : np.pi * (x-1024),
                          })
 
 
@@ -130,11 +137,18 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     nsrc = len(phot_ct_rate)
 
+    x = pix_coords_2mass[0][~bad_2mass]
+    y = pix_coords_2mass[1][~bad_2mass]
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
-                                'x_0': pix_coords_2mass[0][~bad_2mass],
-                                'y_0': pix_coords_2mass[1][~bad_2mass],
+                                'x_mean': x,
+                                'y_mean': y,
+                                'x_0': x,
+                                'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),
+                                'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+                                'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y - 1024)/4096),
+                                'theta' : np.pi * (x-1024),
                                })
 
 

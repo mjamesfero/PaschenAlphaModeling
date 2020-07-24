@@ -133,7 +133,6 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
                                   (model1.x_0-bbox_size*model1.radius,
                                    model1.x_0+bbox_size*model1.radius)]
 
-
             model.render(image)
 
     finally:

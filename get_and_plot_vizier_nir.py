@@ -100,32 +100,16 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     
     x = pix_coords_vvv[0][~bad_vvv]
     y = pix_coords_vvv[1][~bad_vvv]
-    xstd = []
-    ystd = []
 
-    for ii in range(len(x)):
-      if x[ii] != 1024 and y[ii] != 1024:
-        xstd.append(abs(1.2 * (x[ii] - 1024)/4096 * (y[ii] - 1024)/4096))
-        ystd.append(abs(0.8 * (-x[ii] + 1024)/4096 * (y[ii] - 1024)/4096))
-      elif x[ii] != 1024 and y[ii] == 1024:
-        xstd.append(abs(1.2 * (x[ii] - 1024)/4096 * (1023 - 1024)/4096))
-        ystd.append(abs(0.8 * (-x[ii] + 1024)/4096 * (1023 - 1024)/4096))
-      elif x[ii] == 1024 and y[ii] != 1024:
-        xstd.append(abs(1.2 * (1023 - 1024)/4096 * (y[ii] - 1024)/4096))
-        ystd.append(abs(0.8 * (-1023 + 1024)/4096 * (y[ii] - 1024)/4096))
-      else:
-        xstd.append(abs(1.2 * (1023 - 1024)/4096 * (1023 - 1024)/4096))
-        ystd.append(abs(0.8 * (-1023 + 1024)/4096 * (1023 - 1024)/4096))
-    
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table = Table({'amplitude': np.sqrt(phot_ct * transmission_fraction),
-                          'x_mean': x, #np.repeat(0, nsrc),
-                          'y_mean': y, #np.repeat(0, nsrc),
+    source_table = Table({'amplitude': phot_ct * transmission_fraction,
+                          'x_mean': np.round(x_1), 
+                          'y_mean': np.round(y_1), 
                           'x_0': x,
                           'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
-                          'x_stddev' : xstd,
-                          'y_stddev' : ystd,
+                          'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+                          'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
                           'theta' : np.pi * (x-1024),
                          })
 
@@ -156,30 +140,16 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     x = pix_coords_2mass[0][~bad_2mass]
     y = pix_coords_2mass[1][~bad_2mass]
-    xstd = []
-    ystd = []
-    for ii in range(len(x)):
-      if x[ii] != 1024 and y[ii] != 1024:
-        xstd.append(abs(1.2 * (x[ii] - 1024)/4096 * (y[ii] - 1024)/4096))
-        ystd.append(abs(0.8 * (-x[ii] + 1024)/4096 * (y[ii] - 1024)/4096))
-      elif x[ii] != 1024 and y[ii] == 1024:
-        xstd.append(abs(1.2 * (x[ii] - 1024)/4096 * (1023 - 1024)/4096))
-        ystd.append(abs(0.8 * (-x[ii] + 1024)/4096 * (1023 - 1024)/4096))
-      elif x[ii] == 1024 and y[ii] != 1024:
-        xstd.append(abs(1.2 * (1023 - 1024)/4096 * (y[ii] - 1024)/4096))
-        ystd.append(abs(0.8 * (-1023 + 1024)/4096 * (y[ii] - 1024)/4096))
-      else:
-        xstd.append(abs(1.2 * (1023 - 1024)/4096 * (1023 - 1024)/4096))
-        ystd.append(abs(0.8 * (-1023 + 1024)/4096 * (1023 - 1024)/4096))
+
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table_2mass = Table({'amplitude': np.sqrt(phot_ct * transmission_fraction),
-                                'x_mean': x, #np.repeat(0, nsrc),
-                                'y_mean': y, #np.repeat(0, nsrc),
+    source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
+                                'x_mean': np.round(x_1), 
+                                'y_mean': np.round(y_1), 
                                 'x_0': x,
                                 'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),
-                                'x_stddev' : xstd,
-                                'y_stddev' : ystd,
+                                'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+                                'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
                                 'theta' : np.pi * (x-1024),
                                })
 

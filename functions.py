@@ -90,6 +90,124 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
 	#                                        source_table['y_0_1'][ii],
 	#                                        source_table['theta_0'][ii]))
 
+	model = models.AiryDisk2D(airy_radius)
+
+	image = np.zeros(shape, dtype=np.float64)
+	yidx, xidx = np.indices(shape)
+
+	test = []
+
+	params_to_set = []
+	for param in source_table.colnames:
+		if param in model.param_names:
+			params_to_set.append(param)
+
+	# Save the initial parameter values so we can set them back when
+	# done with the loop.  It's best not to copy a model, because some
+	# models (e.g. PSF models) may have substantial amounts of data in
+	# them.
+
+	init_params = {param: getattr(model, param) for param in params_to_set}
+
+	if not progressbar:
+		progressbar = lambda x: x
+
+	try:
+		for source in progressbar(source_table):
+			for param in params_to_set:
+				setattr(model, param, source[param])
+
+			model.bounding_box = [(model.y_0-bbox_size*model.radius,
+								   model.y_0+bbox_size*model.radius),
+								  (model.x_0-bbox_size*model.radius,
+								   model.x_0+bbox_size*model.radius)]
+
+		  
+			model.render(image)
+
+	finally:
+		for param, value in init_params.items():
+			setattr(model, param, value)
+
+	return image
+
+
+
+def make_2_model_sources_image_faster(shape, airy_radius, source_table,
+									bbox_size=10,
+									progressbar=False):
+	"""
+	Make an image containing sources generated from a user-specified
+	model.
+	FASTER VERSION: only add to a small cutout (a 'bbox')
+
+	Parameters
+	----------
+	shape : 2-tuple of int
+		The shape of the output 2D image.
+
+	model : 2D astropy.modeling.models object
+		The model to be used for rendering the sources.
+
+	source_table : `~astropy.table.Table`
+		Table of parameters for the sources.  Each row of the table
+		corresponds to a source whose model parameters are defined by
+		the column names, which must match the model parameter names.
+		Column names that do not match model parameters will be ignored.
+		Model parameters not defined in the table will be set to the
+		``model`` default value.
+
+	bbox_size : float
+		Size of bounding box in number of radii...
+
+	Returns
+	-------
+	image : 2D `~numpy.ndarray`
+		Image containing model sources.
+
+	See Also
+	--------
+	make_random_models_table, make_gaussian_sources_image
+
+	Examples
+	--------
+	.. plot::
+		:include-source:
+
+		from collections import OrderedDict
+		from astropy.modeling.models import Moffat2D
+		from photutils.datasets import (make_random_models_table,
+										make_model_sources_image)
+
+		model = Moffat2D()
+		n_sources = 10
+		shape = (100, 100)
+		param_ranges = [('amplitude', [100, 200]),
+						('x_0', [0, shape[1]]),
+						('y_0', [0, shape[0]]),
+						('gamma', [5, 10]),
+						('alpha', [1, 2])]
+		param_ranges = OrderedDict(param_ranges)
+		sources = make_random_models_table(n_sources, param_ranges,
+										   random_state=12345)
+
+		data = make_model_sources_image(shape, model, sources)
+		plt.imshow(data)
+	"""
+	#needed: to have each model=convolve have [souces] in it 
+	#while still doing everything else
+	#models = for ii in len(source_table):
+	#            convolve_models(models.Gaussian2D(source_table['amplitude_0'][ii], 
+	#                                        source_table['x_mean_0'][ii], 
+	#                                        source_table['y_mean_0'][ii],
+	#                                        source_table['x_stddev_0'][ii],
+	#                                        source_table['y_stddev_0'][ii],
+	#                                        source_table['theta_0'][ii]), 
+	#                        models.AiryDisk2D(source_table['amplitude_1'][ii],
+	#                                        source_table['x_0_1'][ii],
+	#                                        source_table['y_0_1'][ii],
+	#                                        source_table['theta_0'][ii]))
+
 	model1 = models.AiryDisk2D(airy_radius)
 	model2 = models.Gaussian2D()
 	model1.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
@@ -150,8 +268,8 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
 def make_stars_im(size, readnoise=10*u.count, bias=0*u.count,
 				  dark_rate=1*u.count/u.s, exptime=1*u.s, nstars=None,
 				  sources=None, counts=10000, airy_radius=3.2, skybackground=False,
-				  sky=20, hotpixels=False, biascol=False, progressbar=False,
-				  seed=8392):
+				  sky=20, hotpixels=False, biascol=False, progressbar=False, 
+				  vary_psf=False, seed=8392):
 	"""
 	Parameters
 	----------
@@ -229,8 +347,11 @@ def make_stars_im(size, readnoise=10*u.count, bias=0*u.count,
 											  random_state=12345)
 	elif sources is None and nstars is None:
 		raise ValueError("Must specify either nstars or sources")
-	
-	star_im = make_model_sources_image_faster(shape, airy_radius, sources,
+	if vary_psf:
+		star_im = make_2_model_sources_image_faster(shape, airy_radius, sources,
+											  progressbar=progressbar)
+	else:
+		star_im = make_model_sources_image_faster(shape, airy_radius, sources,
 											  progressbar=progressbar)
 	#star_im = convolve(stars_alone, Gaussian2DKernel(sources['x_stddev'], sources['y_stddev'], sources['theta']), mode="same")
 	##stars and background
@@ -249,7 +370,7 @@ def make_turbulence_im(size, airy_radius=3.2, power=3, brightness=1):
 
 def make_turbulent_starry_im(size, readnoise, bias, dark_rate, exptime, nstars=None,
 							 sources=None, counts=10000, airy_radius=3.2, power=3,
-							 skybackground=False, sky=20, hotpixels=False,
+							 skybackground=False, sky=20, hotpixels=False, vary_psf=False,
 							 biascol=False, brightness=1, progressbar=False):
 
 	turbulent_im = make_turbulence_im(size=size, airy_radius=airy_radius, power=power,
@@ -261,7 +382,7 @@ def make_turbulent_starry_im(size, readnoise, bias, dark_rate, exptime, nstars=N
 										counts=counts, airy_radius=airy_radius,
 										skybackground=skybackground, sky=sky,
 										hotpixels=hotpixels, biascol=biascol,
-										progressbar=progressbar)
+										progressbar=progressbar, vary_psf=vary_psf)
 
 	##turbulent image with stars
 	turbulent_stars = turbulent_im + stars_background_im
@@ -299,7 +420,7 @@ def make_HII_starry_im(readnoise, bias, dark_rate, exptime, size=2048,
 							 nstars=None, fov=27.5*u.arcmin*u.arcmin, 
 							 sources=None, counts=10000, airy_radius=3.2, power=3,
 							 skybackground=False, sky=20, hotpixels=False,
-							 biascol=False, progressbar=False):
+							 biascol=False, progressbar=False, vary_psf=False):
 
 	hii_im = add_HII_region(region=region, fov=fov,  
 							airy_radius=airy_radius, power=power)
@@ -310,7 +431,7 @@ def make_HII_starry_im(readnoise, bias, dark_rate, exptime, size=2048,
 										counts=counts, airy_radius=airy_radius,
 										skybackground=skybackground, sky=sky,
 										hotpixels=hotpixels, biascol=biascol,
-										progressbar=progressbar)
+										progressbar=progressbar, vary_psf=vary_psf)
 	stars_background = stars_background_im*u.Jy
 	no_hii = stars_background.to(u.MJy)
 

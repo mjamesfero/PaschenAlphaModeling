@@ -23,7 +23,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                      pixscale=0.806*u.arcsec, exptime=500*u.s,
                      max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
                      imsize=2048, diameter=24*u.cm, brightness=0, 
-                     region='W51-CBAND-feathered.fits', 
+                     region='W51-CBAND-feathered.fits', vary_psf=False,
                      readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
                      transmission_fraction=0.70*0.75, hii=False
                     ):
@@ -103,8 +103,8 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table = Table({'amplitude': phot_ct * transmission_fraction,
-                          'x_mean': np.round(x_1), 
-                          'y_mean': np.round(y_1), 
+                          'x_mean': np.round(x), 
+                          'y_mean': np.round(y), 
                           'x_0': x,
                           'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -143,8 +143,8 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
-                                'x_mean': np.round(x_1), 
-                                'y_mean': np.round(y_1), 
+                                'x_mean': np.round(x), 
+                                'y_mean': np.round(y), 
                                 'x_0': x,
                                 'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -163,13 +163,13 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                                               sources=source_table_both,
                                               airy_radius=(airy_radius/pixscale).value,
                                               power=3, skybackground=False,
-                                              sky=0, hotpixels=False,
+                                              sky=0, hotpixels=False, vary_psf=vary_psf,
                                               biascol=False, progressbar=ProgressBar)
       stars_background_im, turbulent_stars, turbulence = rslt
     else:
       rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
                                               dark_rate=dark_rate, exptime=exptime,
-                                              nstars=None,
+                                              nstars=None, vary_psf=vary_psf,
                                               sources=source_table_both,
                                               airy_radius=(airy_radius/pixscale).value,
                                               power=3, skybackground=False,

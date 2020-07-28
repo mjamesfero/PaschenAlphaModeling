@@ -3,6 +3,7 @@ import os
 
 from astropy import units as u
 from astropy.io import fits
+from astropy.stats import mad_std
 
 import json
 
@@ -19,13 +20,13 @@ def trytoget(glon, glat, **kwargs):
         stars_background_im_offset = fits.getdata(offfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=5*(10**4) **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, brightness=2.5*(10**2) **kwargs)
             stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800*u.AA, **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)
         header = fits.Header(header)
-        fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
+        fits.PrimaryHDU(data=turbulent_stars, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
         header_offset = fits.Header(header_offset)
@@ -33,12 +34,22 @@ def trytoget(glon, glat, **kwargs):
                                                                          output_verify='fix',
                                                                          overwrite=True)
 
-    fcso = stars_background_im - stars_background_im_offset
-    ignore = stars_background_im < 10
-    noise = np.sqrt(stars_background_im)
-    noise[ignore] = np.nan
-    fcso_noise_ratio = fcso/noise
-    return stars_background_im, stars_background_im_offset, fcso_noise_ratio
+    fcso = turbulent_stars - stars_background_im_offset
+    poisson_noise = np.sqrt(turbulent_stars + stars_background_im_offset)
+    systematic_noise = mad_std(fcso)
+    total_noise = np.sqrt(poisson_noise**2 + systematic_noise**2)
+    snr = np.abs(fcso)/total_noise
+
+
+    fcso2 = stars_background_im - stars_background_im_offset
+    poisson_noise2 = np.sqrt(stars_background_im + stars_background_im_offset)
+    systematic_noise2 = mad_std(fcso2)
+    noise_no_turbulence = np.sqrt(poisson_noise2**2 + systematic_noise2**2)
+    SNR = np.abs(fcso2)/noise_no_turbulence
+    greater_than = np.count_nonzero(np.abs(SNR) > 1)/(2048**2)
+
+
+    return turbulent_stars, stars_background_im_offset, total_noise, snr, noise_no_turbulence, greater_than
 
 if __name__ == "__main__":
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)

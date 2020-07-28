@@ -35,3 +35,12 @@ array_cont, footprint = reproject_and_coadd([h[1] for h in hdus if h[0].header['
 fits.PrimaryHDU(data=array_line, header=wcs_out.to_header()).writeto('gc_mosaic_miris_line.fits', overwrite=True)
 fits.PrimaryHDU(data=array_line - array_cont, header=wcs_out.to_header()).writeto('gc_mosaic_miris_line_minus_cont.fits', overwrite=True)
 fits.PrimaryHDU(data=array_cont, header=wcs_out.to_header()).writeto('gc_mosaic_miris_cont.fits', overwrite=True)
+
+
+line = fits.open('gc_mosaic_miris_line.fits')
+cont = fits.open('gc_mosaic_miris_cont.fits')
+
+# "best-fit" offset power-law fit to line vs cont
+contsub = line[0].data - cont[0].data**1.1 * 0.35
+
+fits.PrimaryHDU(data=contsub, header=wcs_out.to_header()).writeto('gc_mosaic_miris_line_minus_cont_scaled_pow1.1_x0p35.fits')

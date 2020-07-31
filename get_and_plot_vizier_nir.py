@@ -14,7 +14,7 @@ from astropy import visualization
 
 import functions
 from sensitivity import (fov, pixscale, fiducial_integration_time, wl_paa,
-                         diameter, throughput, dark_rate_pessimistic,
+                         aperture_diameter, throughput, dark_rate_pessimistic,
                          readnoise_pessimistic, paa_bandwidth, paac_bandwidth)
 
 pa_wavelength = wl_paa
@@ -24,7 +24,7 @@ pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
                       pixscale=pixscale, exptime=fiducial_integration_time,
                       max_rows=int(1e6), kmag_threshold=8.5, wavelength=wl_paa,
-                      imsize=2048, diameter=diameter, linename='paa',
+                      imsize=2048, diameter=aperture_diameter, linename='paa',
                       bandwidth=paa_bandwidth,
                       readnoise=readnoise_pessimistic,
                       dark_rate=dark_rate_pessimistic,
@@ -164,7 +164,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
                             pixscale=pixscale,
                             exptime=fiducial_integration_time,
                             max_rows=int(1e6), kmag_threshold=8.5,
-                            wavelength=wl_paa, imsize=2048, diameter=diameter,
+                            wavelength=wl_paa, imsize=2048, diameter=aperture_diameter,
                             linename='paa',
                             bandwidth=paa_bandwidth,
                             brightness=0, region='W51-CBAND-feathered.fits',

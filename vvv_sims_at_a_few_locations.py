@@ -23,7 +23,7 @@ def trytoget(glon, glat, **kwargs):
         stars_background_im_paacl = fits.getdata(paaclfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa' **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa', **kwargs)
             stars_background_im_paach, turbulent_stars_paach, turbulence_paach, header_paach = get_and_plot_vizier_nir(glon, glat, wavelength=18850*u.AA, bandwidth=10*u.nm, linename='paac_h', **kwargs)
             stars_background_im_paacl, turbulent_stars_paacl, turbulence_paacl, header_paacl = get_and_plot_vizier_nir(glon, glat, wavelength=18660*u.AA, bandwidth=10*u.nm, linename='paac_l', **kwargs)
         except Exception as ex:

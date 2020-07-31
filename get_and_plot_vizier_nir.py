@@ -89,9 +89,9 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
                     bandwidth_Hz).decompose()
     phot_ct = (phot_ct_rate * exptime).to(u.ph).value
 
-    cat2.add_column(data=phot_ct, name=f'{linename}_phot_ct')
-    cat2.add_column(data=phot_ct_rate, name=f'{linename}_phot_ct_rate')
-    cat2.add_column(data=fluxes, name=f'{linename}_flux')
+    cat2.add_column(col=phot_ct, name=f'{linename}_phot_ct')
+    cat2.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
+    cat2.add_column(col=fluxes, name=f'{linename}_flux')
 
     nsrc = len(phot_ct_rate)
 
@@ -134,9 +134,9 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
     phot_ct = (phot_ct_rate * exptime).to(u.ph).value
 
 
-    cat2mass.add_column(data=phot_ct, name=f'{linename}_phot_ct')
-    cat2mass.add_column(data=phot_ct_rate, name=f'{linename}_phot_ct_rate')
-    cat2mass.add_column(data=fluxes, name=f'{linename}_flux')
+    cat2mass.add_column(col=phot_ct, name=f'{linename}_phot_ct')
+    cat2mass.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
+    cat2mass.add_column(col=fluxes, name=f'{linename}_flux')
 
     nsrc = len(phot_ct_rate)
 

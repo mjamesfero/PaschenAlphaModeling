@@ -13,20 +13,22 @@ from photutils.datasets import make_random_gaussians_table, make_model_sources_i
 from astropy import visualization
 
 import functions
+from sensitivity import fov, pixscale, fiducial_integration_time, wl_paa, diameter, throughput, dark_rate_pessimistic, readnoise_pessimistic
 
-pa_wavelength = 1.8756*u.um
+pa_wavelength = wl_paa
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
 
-def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
-                     pixscale=0.806*u.arcsec, exptime=500*u.s,
-                     max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
-                     imsize=2048, diameter=24*u.cm, brightness=0, 
-                     region='W51-CBAND-feathered.fits', vary_psf=False,
-                     readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
-                     transmission_fraction=0.70*0.75, hii=False
-                    ):
+def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
+                            pixscale=pixscale,
+                            exptime=fiducial_integration_time,
+                            max_rows=int(1e6), kmag_threshold=8.5,
+                            wavelength=wl_paa, imsize=2048, diameter=diameter,
+                            brightness=0, region='W51-CBAND-feathered.fits',
+                            vary_psf=False, readnoise=readnoise_pessimistic,
+                            dark_rate=dark_rate_pessimistic,
+                            transmission_fraction=throughput, hii=False):
     """
     Dark current / readnoise:
     Pessimistic case is 0.435 ct/s, 22 ct
@@ -97,14 +99,14 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     phot_ct = (phot_ct_rate * exptime).to(u.ph).value
 
     nsrc = len(phot_ct_rate)
-    
+
     x = pix_coords_vvv[0][~bad_vvv]
     y = pix_coords_vvv[1][~bad_vvv]
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table = Table({'amplitude': phot_ct * transmission_fraction,
-                          'x_mean': np.round(x), 
-                          'y_mean': np.round(y), 
+                          'x_mean': np.round(x),
+                          'y_mean': np.round(y),
                           'x_0': x,
                           'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -143,8 +145,8 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
     source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
-                                'x_mean': np.round(x), 
-                                'y_mean': np.round(y), 
+                                'x_mean': np.round(x),
+                                'y_mean': np.round(y),
                                 'x_0': x,
                                 'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),

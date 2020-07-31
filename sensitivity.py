@@ -30,10 +30,10 @@ ps_sensitivity = sb_sensitivity * psf_area
 pixscale = (0.806*u.arcsec)
 fov = pixscale * 2048
 
-readnoise_pessimistic = 22*u.ph
-readnoise_optimistic = 6.2*u.ph
-dark_rate_optimistic = 0.123*u.ph/u.s
-dark_rate_pessimistic = 0.435*u.ph/u.s
+readnoise_pessimistic = 22*u.count
+readnoise_optimistic = 6.2*u.count
+dark_rate_optimistic = 0.123*u.count/u.s
+dark_rate_pessimistic = 0.435*u.count/u.s
 
 fiducial_integration_time = 500*u.s
 
@@ -49,14 +49,14 @@ max_unsaturated_rate = saturation_limit / fiducial_integration_time * (airymod.m
 
 rn_pess = readnoise_pessimistic/fiducial_integration_time
 # Poisson noise
-darkn_pess = ((dark_rate_pessimistic * fiducial_integration_time)**0.5).value * u.ph / fiducial_integration_time
-dark_rn_pess = (((rn_pess + darkn_pess) * (e_paa/u.ph) /
+darkn_pess = ((dark_rate_pessimistic * fiducial_integration_time)**0.5).value * u.count / fiducial_integration_time
+dark_rn_pess = (((rn_pess + darkn_pess) * (e_paa/u.count) /
                  collecting_area / nu_paa).to(u.mJy) /
                 pixscale**2).to(u.MJy/u.sr) / throughput
 
 rn_opt = readnoise_optimistic/fiducial_integration_time
-darkn_opt = ((dark_rate_optimistic * fiducial_integration_time * u.ph)**0.5).value * u.ph / fiducial_integration_time
-dark_rn_opt = (((rn_opt + darkn_opt) * (e_paa/u.ph) /
+darkn_opt = ((dark_rate_optimistic * fiducial_integration_time * u.count)**0.5).value * u.count / fiducial_integration_time
+dark_rn_opt = (((rn_opt + darkn_opt) * (e_paa/u.count) /
                 collecting_area / nu_paa).to(u.mJy) /
                pixscale**2).to(u.MJy/u.sr) / throughput
 

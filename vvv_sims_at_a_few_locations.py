@@ -49,6 +49,9 @@ def trytoget(glon, glat, **kwargs):
     return stars_background_im, stars_background_im_paacl, stars_background_im_paach, noise_no_turbulence, greater_than
 
 if __name__ == "__main__":
+    # Do a "dry run" first to make sure there are no errors...
+    stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(10*u.deg, 0*u.deg, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa')
+
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
                for glon, glat in
                [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),

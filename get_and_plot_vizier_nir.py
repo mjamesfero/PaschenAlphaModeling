@@ -131,7 +131,7 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
 
     phot_ct_rate = (phot_fluxes * collecting_area * pixel_fraction_of_area *
                     bandwidth_Hz).decompose()
-    phot_ct = (phot_ct_rate * exptime).to(u.ph).value
+    phot_ct = (phot_ct_rate * exptime).to(u.photon).value
 
 
     cat2mass.add_column(col=phot_ct, name=f'{linename}_phot_ct')

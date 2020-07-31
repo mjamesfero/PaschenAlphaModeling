@@ -9,6 +9,11 @@ from astropy import modeling
 sb_sensitivity = 1.5e-16 *u.erg/u.s/u.cm**2/u.arcsec**2
 aperture_diameter = 24*u.cm
 
+collecting_area = (aperture_diameter/2)**2 * np.pi
+
+paa_bandwidth = 5*u.nm
+paac_bandwidth = 10*u.nm
+
 wl_paa = hydrogen.wavelength['paschena']*u.um
 e_paa = wl_paa.to(u.erg, u.spectral())
 nu_paa = wl_paa.to(u.Hz, u.spectral())
@@ -46,13 +51,13 @@ rn_pess = readnoise_pessimistic/fiducial_integration_time
 # Poisson noise
 darkn_pess = ((dark_rate_pessimistic * fiducial_integration_time)**0.5).value * u.ph / fiducial_integration_time
 dark_rn_pess = (((rn_pess + darkn_pess) * (e_paa/u.ph) /
-                 (aperture_diameter/2)**2 / np.pi / nu_paa).to(u.mJy) /
+                 collecting_area / nu_paa).to(u.mJy) /
                 pixscale**2).to(u.MJy/u.sr) / throughput
 
 rn_opt = readnoise_optimistic/fiducial_integration_time
 darkn_opt = ((dark_rate_optimistic * fiducial_integration_time * u.ph)**0.5).value * u.ph / fiducial_integration_time
 dark_rn_opt = (((rn_opt + darkn_opt) * (e_paa/u.ph) /
-                (aperture_diameter/2)**2 / np.pi / nu_paa).to(u.mJy) /
+                collecting_area / nu_paa).to(u.mJy) /
                pixscale**2).to(u.MJy/u.sr) / throughput
 
 miris_sb_sens = 0.77*u.mJy/(52*u.arcsec)**2

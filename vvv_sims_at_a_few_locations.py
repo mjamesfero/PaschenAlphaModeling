@@ -50,7 +50,7 @@ def trytoget(glon, glat, **kwargs):
 
 if __name__ == "__main__":
     # Do a "dry run" first to make sure there are no errors...
-    stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(10*u.deg, 0*u.deg, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa')
+    stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(10*u.deg, 5*u.deg, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa')
 
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
                for glon, glat in

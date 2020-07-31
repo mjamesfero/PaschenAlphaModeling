@@ -81,7 +81,7 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
     bad_vvv = (cat2['Ksmag3'].mask | cat2['Hmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))
 
-    phot_fluxes = fluxes[~bad_vvv] / pa_energy * u.photon
+    phot_fluxes = fluxes / pa_energy * u.photon
 
     bandwidth_Hz = ((bandwidth / wavelength) * pa_freq).to(u.Hz)
 
@@ -93,13 +93,13 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
     cat2.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
     cat2.add_column(col=fluxes, name=f'{linename}_flux')
 
-    nsrc = len(phot_ct_rate)
+    nsrc = len(phot_ct_rate[~bad_vvv])
 
     x = pix_coords_vvv[0][~bad_vvv]
     y = pix_coords_vvv[1][~bad_vvv]
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table = Table({'amplitude': phot_ct * transmission_fraction,
+    source_table = Table({'amplitude': phot_ct[~bad_vvv] * transmission_fraction,
                           'x_mean': np.round(x),
                           'y_mean': np.round(y),
                           'x_0': x,
@@ -127,7 +127,7 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |
                  (pix_coords_2mass[1] > imsize) | (~twomass_bright))
 
-    phot_fluxes = fluxes[~bad_2mass] / pa_energy * u.photon
+    phot_fluxes = fluxes / pa_energy * u.photon
 
     phot_ct_rate = (phot_fluxes * collecting_area * pixel_fraction_of_area *
                     bandwidth_Hz).decompose()
@@ -138,13 +138,13 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
     cat2mass.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
     cat2mass.add_column(col=fluxes, name=f'{linename}_flux')
 
-    nsrc = len(phot_ct_rate)
+    nsrc = len(phot_ct_rate[~bad_2mass])
 
     x = pix_coords_2mass[0][~bad_2mass]
     y = pix_coords_2mass[1][~bad_2mass]
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
+    source_table_2mass = Table({'amplitude': phot_ct[~bad_2mass] * transmission_fraction,
                                 'x_mean': np.round(x),
                                 'y_mean': np.round(y),
                                 'x_0': x,

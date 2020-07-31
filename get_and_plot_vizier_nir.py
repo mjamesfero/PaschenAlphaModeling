@@ -158,7 +158,7 @@ def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
 
     source_table_both = table.vstack([source_table, source_table_2mass])
 
-    return source_table_both, cat2, cat2mass
+    return source_table_both, cat2, cat2mass, header
 
 def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
                             pixscale=pixscale,
@@ -182,7 +182,7 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
     dark_rn_opt = (((6.2*u.ph/(500*u.s) + 0.0123*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
     """
 
-    source_table_both, _, _ = make_source_table(glon=glon, glat=glat, fov=fov,
+    source_table_both, _, _, header = make_source_table(glon=glon, glat=glat, fov=fov,
                                                 pixscale=pixscale,
                                                 exptime=exptime,
                                                 max_rows=max_rows,

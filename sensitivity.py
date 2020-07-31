@@ -45,6 +45,10 @@ yy,xx = np.mgrid[-25:25:1,-25:25:1]
 airymod = modeling.models.AiryDisk2D(amplitude=1, x_0=0, y_0=0, radius=fwhm/pixscale)(yy,xx)
 
 max_unsaturated_rate = saturation_limit / fiducial_integration_time * (airymod.max() / airymod.sum()) * throughput
+paa_bandwidth_Hz = (paa_bandwidth / wl_paa) * nu_paa
+max_unsaturated_flux = (e_paa / collecting_area * max_unsaturated_rate / paa_bandwidth_Hz).to(u.mJy)
+mag_zeropoint_paa = 870*u.Jy # interpolated
+max_unsaturated_mag = -2.5 * np.log10(max_unsaturated_flux / mag_zeropoint_paa)
 
 
 rn_pess = readnoise_pessimistic/fiducial_integration_time

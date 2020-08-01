@@ -13,31 +13,22 @@ from photutils.datasets import make_random_gaussians_table, make_model_sources_i
 from astropy import visualization
 
 import functions
+from sensitivity import (fov, pixscale, fiducial_integration_time, wl_paa,
+                         aperture_diameter, throughput, dark_rate_pessimistic,
+                         readnoise_pessimistic, paa_bandwidth, paac_bandwidth)
 
-pa_wavelength = 1.8756*u.um
+pa_wavelength = wl_paa
 pa_energy = pa_wavelength.to(u.erg, u.spectral())
 pa_freq = pa_wavelength.to(u.Hz, u.spectral())
 
-
-def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
-                     pixscale=0.806*u.arcsec, exptime=500*u.s,
-                     max_rows=int(4e5), kmag_threshold=8.5, wavelength=18750*u.AA,
-                     imsize=2048, diameter=24*u.cm, brightness=0, 
-                     region='W51-CBAND-feathered.fits', vary_psf=False,
-                     readnoise=22*u.count, dark_rate=0.435*u.count/u.s,
-                     transmission_fraction=0.70*0.75, hii=False
-                    ):
-    """
-    Dark current / readnoise:
-    Pessimistic case is 0.435 ct/s, 22 ct
-    Optimistic case is 0.0123 ct/s, 6.2 ct
-
-    In surface brightness, these are (for exptime=500s):
-
-    dark_rn_pess = (((22*u.ph/(500*u.s) + 0.435*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
-    dark_rn_opt = (((6.2*u.ph/(500*u.s) + 0.0123*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
-    """
-
+def make_source_table(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
+                      pixscale=pixscale, exptime=fiducial_integration_time,
+                      max_rows=int(1e6), kmag_threshold=8.5, wavelength=wl_paa,
+                      imsize=2048, diameter=aperture_diameter, linename='paa',
+                      bandwidth=paa_bandwidth,
+                      readnoise=readnoise_pessimistic,
+                      dark_rate=dark_rate_pessimistic,
+                      transmission_fraction=throughput):
     Viz = Vizier(row_limit=max_rows)
     cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
                             radius=fov/2**0.5, catalog=["II/348", "II/246"])
@@ -90,27 +81,33 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
     bad_vvv = (cat2['Ksmag3'].mask | cat2['Hmag3'].mask | (pix_coords_vvv[0] < 0) | (pix_coords_vvv[0] > imsize) |
                (pix_coords_vvv[1] < 0) | (pix_coords_vvv[1] > imsize) | (~vvv_faint))
 
-    phot_fluxes = fluxes[~bad_vvv] / pa_energy * u.photon
+    phot_fluxes = fluxes / pa_energy * u.photon
+
+    bandwidth_Hz = ((bandwidth / wavelength) * pa_freq).to(u.Hz)
 
     phot_ct_rate = (phot_fluxes * collecting_area * pixel_fraction_of_area *
-                    pa_freq).decompose()
+                    bandwidth_Hz).decompose()
     phot_ct = (phot_ct_rate * exptime).to(u.ph).value
 
-    nsrc = len(phot_ct_rate)
-    
+    cat2.add_column(col=phot_ct, name=f'{linename}_phot_ct')
+    cat2.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
+    cat2.add_column(col=fluxes, name=f'{linename}_flux')
+
+    nsrc = len(phot_ct_rate[~bad_vvv])
+
     x = pix_coords_vvv[0][~bad_vvv]
     y = pix_coords_vvv[1][~bad_vvv]
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table = Table({'amplitude': phot_ct * transmission_fraction,
-                          'x_mean': np.round(x), 
-                          'y_mean': np.round(y), 
+    source_table = Table({'amplitude': phot_ct[~bad_vvv] * transmission_fraction,
+                          'x_mean': np.round(x),
+                          'y_mean': np.round(y),
                           'x_0': x,
                           'y_0': y,
                           'radius': np.repeat(airy_radius/pixscale, nsrc),
-                          'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
-                          'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
-                          'theta' : np.pi * (x-1024),
+                          'x_stddev': abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+                          'y_stddev': abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
+                          'theta': np.pi * (x-1024),
                          })
 
 
@@ -130,21 +127,26 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
                  (pix_coords_2mass[0] > imsize) | (pix_coords_2mass[1] < 0) |
                  (pix_coords_2mass[1] > imsize) | (~twomass_bright))
 
-    phot_fluxes = fluxes[~bad_2mass] / pa_energy * u.photon
+    phot_fluxes = fluxes / pa_energy * u.photon
 
     phot_ct_rate = (phot_fluxes * collecting_area * pixel_fraction_of_area *
-                    pa_freq).decompose()
-    phot_ct = (phot_ct_rate * exptime).to(u.ph).value
+                    bandwidth_Hz).decompose()
+    phot_ct = (phot_ct_rate * exptime).to(u.photon).value
 
-    nsrc = len(phot_ct_rate)
+
+    cat2mass.add_column(col=phot_ct, name=f'{linename}_phot_ct')
+    cat2mass.add_column(col=phot_ct_rate, name=f'{linename}_phot_ct_rate')
+    cat2mass.add_column(col=fluxes, name=f'{linename}_flux')
+
+    nsrc = len(phot_ct_rate[~bad_2mass])
 
     x = pix_coords_2mass[0][~bad_2mass]
     y = pix_coords_2mass[1][~bad_2mass]
 
     #Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
-    source_table_2mass = Table({'amplitude': phot_ct * transmission_fraction,
-                                'x_mean': np.round(x), 
-                                'y_mean': np.round(y), 
+    source_table_2mass = Table({'amplitude': phot_ct[~bad_2mass] * transmission_fraction,
+                                'x_mean': np.round(x),
+                                'y_mean': np.round(y),
                                 'x_0': x,
                                 'y_0': y,
                                 'radius': np.repeat(airy_radius/pixscale, nsrc),
@@ -156,27 +158,71 @@ def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=27.5*u.arcmin,
 
     source_table_both = table.vstack([source_table, source_table_2mass])
 
+    return source_table_both, cat2, cat2mass, header
+
+def get_and_plot_vizier_nir(glon=2.5*u.deg, glat=0.1*u.deg, fov=fov,
+                            pixscale=pixscale,
+                            exptime=fiducial_integration_time,
+                            max_rows=int(1e6), kmag_threshold=8.5,
+                            wavelength=wl_paa, imsize=2048, diameter=aperture_diameter,
+                            linename='paa',
+                            bandwidth=paa_bandwidth,
+                            brightness=0, region='W51-CBAND-feathered.fits',
+                            vary_psf=False, readnoise=readnoise_pessimistic,
+                            dark_rate=dark_rate_pessimistic,
+                            transmission_fraction=throughput, hii=False):
+    """
+    Dark current / readnoise:
+    Pessimistic case is 0.435 ct/s, 22 ct
+    Optimistic case is 0.0123 ct/s, 6.2 ct
+
+    In surface brightness, these are (for exptime=500s):
+
+    dark_rn_pess = (((22*u.ph/(500*u.s) + 0.435*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
+    dark_rn_opt = (((6.2*u.ph/(500*u.s) + 0.0123*u.ph/u.s) * (e_paa/u.ph) / (24*u.cm/2)**2 / np.pi / nu_paa).to(u.mJy)  / (0.806*u.arcsec)**2).to(u.MJy/u.sr)
+    """
+
+    source_table_both, _, _, header = make_source_table(glon=glon, glat=glat, fov=fov,
+                                                pixscale=pixscale,
+                                                exptime=exptime,
+                                                max_rows=max_rows,
+                                                kmag_threshold=kmag_threshold,
+                                                wavelength=wavelength,
+                                                imsize=imsize,
+                                                diameter=diameter,
+                                                linename=linename,
+                                                bandwidth=bandwidth,
+                                                transmission_fraction=transmission_fraction)
+
+    airy_radius = (1.22 * wavelength / diameter).to(u.arcsec, u.dimensionless_angles())
+
     if hii:
-      rslt = functions.make_HII_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
-                                              dark_rate=dark_rate, exptime=exptime,
-                                              region = region, nstars=None, fov=fov*u.arcmin,
-                                              sources=source_table_both,
-                                              airy_radius=(airy_radius/pixscale).value,
-                                              power=3, skybackground=False,
-                                              sky=0, hotpixels=False, vary_psf=vary_psf,
-                                              biascol=False, progressbar=ProgressBar)
-      stars_background_im, turbulent_stars, turbulence = rslt
+       rslt = functions.make_HII_starry_im(size=imsize, readnoise=readnoise,
+                                           bias=0*u.count, dark_rate=dark_rate,
+                                           exptime=exptime, region=region,
+                                           nstars=None, fov=fov*u.arcmin,
+                                           sources=source_table_both,
+                                           airy_radius=(airy_radius/pixscale).value,
+                                           power=3, skybackground=False, sky=0,
+                                           hotpixels=False, vary_psf=vary_psf,
+                                           biascol=False,
+                                           progressbar=ProgressBar)
+       stars_background_im, turbulent_stars, turbulence = rslt
     else:
-      rslt = functions.make_turbulent_starry_im(size=imsize, readnoise=readnoise, bias=0*u.count,
-                                              dark_rate=dark_rate, exptime=exptime,
-                                              nstars=None, vary_psf=vary_psf,
-                                              sources=source_table_both,
-                                              airy_radius=(airy_radius/pixscale).value,
-                                              power=3, skybackground=False,
-                                              sky=0, hotpixels=False,
-                                              biascol=False, brightness=brightness,
-                                              progressbar=ProgressBar)
-      stars_background_im, turbulent_stars, turbulence = rslt
+       rslt = functions.make_turbulent_starry_im(size=imsize,
+                                                 readnoise=readnoise,
+                                                 bias=0*u.count,
+                                                 dark_rate=dark_rate,
+                                                 exptime=exptime, nstars=None,
+                                                 vary_psf=vary_psf,
+                                                 sources=source_table_both,
+                                                 airy_radius=(airy_radius/pixscale).value,
+                                                 power=3, skybackground=False,
+                                                 sky=0, hotpixels=False,
+                                                 biascol=False,
+                                                 brightness=brightness,
+                                                 progressbar=ProgressBar)
+       stars_background_im, turbulent_stars, turbulence = rslt
 
 
     return stars_background_im, turbulent_stars, turbulence, header

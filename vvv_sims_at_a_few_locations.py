@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy.stats import mad_std
 
 import json
+from sensitivity import saturation_limit
 
 from get_and_plot_vizier_nir import get_and_plot_vizier_nir
 
@@ -14,14 +15,17 @@ warnings.filterwarnings(action='ignore', category=fits.verify.VerifyWarning)
 
 def trytoget(glon, glat, **kwargs):
     fn = f"{glon.value:06.2f}{glat.value:+06.2f}_pa_filter.fits"
-    offfn = f"{glon.value:06.2f}{glat.value:+06.2f}_off_filter.fits"
-    if os.path.exists(fn) and os.path.exists(offfn):
+    paaclfn = f"{glon.value:06.2f}{glat.value:+06.2f}_paacl_filter.fits"
+    paachfn = f"{glon.value:06.2f}{glat.value:+06.2f}_paach_filter.fits"
+    if os.path.exists(fn) and os.path.exists(paachfn):
         stars_background_im = fits.getdata(fn)
-        stars_background_im_offset = fits.getdata(offfn)
+        stars_background_im_paach = fits.getdata(paachfn)
+        stars_background_im_paacl = fits.getdata(paaclfn)
     else:
         try:
-            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18750*u.AA, **kwargs)
-            stars_background_im_offset, turbulent_stars_offset, turbulence_offset, header_offset = get_and_plot_vizier_nir(glon, glat, wavelength=18800*u.AA, **kwargs)
+            stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(glon, glat, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa', **kwargs)
+            stars_background_im_paach, turbulent_stars_paach, turbulence_paach, header_paach = get_and_plot_vizier_nir(glon, glat, wavelength=18850*u.AA, bandwidth=10*u.nm, linename='paac_h', **kwargs)
+            stars_background_im_paacl, turbulent_stars_paacl, turbulence_paacl, header_paacl = get_and_plot_vizier_nir(glon, glat, wavelength=18660*u.AA, bandwidth=10*u.nm, linename='paac_l', **kwargs)
         except Exception as ex:
             print(ex)
             return str(ex)
@@ -29,11 +33,12 @@ def trytoget(glon, glat, **kwargs):
         fits.PrimaryHDU(data=stars_background_im, header=header).writeto(fn,
                                                                          output_verify='fix',
                                                                          overwrite=True)
-        header_offset = fits.Header(header_offset)
-        fits.PrimaryHDU(data=stars_background_im_offset, header=header_offset).writeto(offfn,
-                                                                         output_verify='fix',
-                                                                         overwrite=True)
+        header_paach = fits.Header(header_paach)
+        fits.PrimaryHDU(data=stars_background_im_paach, header=header_paach).writeto(paachfn, output_verify='fix', overwrite=True)
+        header_paacl = fits.Header(header_paacl)
+        fits.PrimaryHDU(data=stars_background_im_paacl, header=header_paacl).writeto(paaclfn, output_verify='fix', overwrite=True)
 
+    stars_background_im_offset = (stars_background_im_paacl + stars_background_im_paach)/4
     fcso = stars_background_im - stars_background_im_offset
     poisson_noise = np.sqrt(stars_background_im + stars_background_im_offset)
     systematic_noise = mad_std(fcso)
@@ -41,9 +46,12 @@ def trytoget(glon, glat, **kwargs):
     SNR = np.abs(fcso)/noise_no_turbulence
     greater_than = np.count_nonzero(np.abs(SNR) > 1)/(2048**2)
 
-    return stars_background_im, stars_background_im_offset, noise_no_turbulence, greater_than
+    return stars_background_im, stars_background_im_paacl, stars_background_im_paach, noise_no_turbulence, greater_than
 
 if __name__ == "__main__":
+    # Do a "dry run" first to make sure there are no errors...
+    stars_background_im, turbulent_stars, turbulence, header = get_and_plot_vizier_nir(10*u.deg, 5*u.deg, wavelength=18756*u.AA, bandwidth=5*u.nm, linename='paa')
+
     results = {(glon, glat): trytoget(glon*u.deg, glat*u.deg)
                for glon, glat in
                [(2.5, 0.1), (2.5, 1), (2.5, 2), (2.5, 3), (2.5, -1),
@@ -81,12 +89,13 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[0], 90),
               95: np.nanpercentile(value[0], 95),
               99: np.nanpercentile(value[0], 99),
+              'saturated': (value[0]>saturation_limit)/value[0].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
             }
 
-    with open('background_nanpercentiles.json', 'w') as fh:
+    with open('background_low_nanpercentiles.json', 'w') as fh:
         json.dump(obj=stats_background, fp=fh)
 
     stats_offset = {"{0}_{1}".format(*key):
@@ -99,6 +108,26 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[1], 90),
               95: np.nanpercentile(value[1], 95),
               99: np.nanpercentile(value[1], 99),
+              'saturated': (value[1]>saturation_limit)/value[1].size,
+             }
+             for key, value in results.items()
+             if not isinstance(value, str)
+            }
+
+    with open('background_high_nanpercentiles.json', 'w') as fh:
+        json.dump(obj=stats_background, fp=fh)
+
+    stats_offset = {"{0}_{1}".format(*key):
+             {'glon': key[0],
+              'glat': key[1],
+              10: np.nanpercentile(value[2], 10),
+              25: np.nanpercentile(value[2], 25),
+              50: np.nanpercentile(value[2], 50),
+              75: np.nanpercentile(value[2], 75),
+              90: np.nanpercentile(value[2], 90),
+              95: np.nanpercentile(value[2], 95),
+              99: np.nanpercentile(value[2], 99),
+              'saturated': (value[2]>saturation_limit)/value[2].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
@@ -110,13 +139,14 @@ if __name__ == "__main__":
     stats_fcso = {"{0}_{1}".format(*key):
              {'glon': key[0],
               'glat': key[1],
-              10: np.nanpercentile(value[2], 10),
-              25: np.nanpercentile(value[2], 25),
-              50: np.nanpercentile(value[2], 50),
-              75: np.nanpercentile(value[2], 75),
-              90: np.nanpercentile(value[2], 90),
-              95: np.nanpercentile(value[2], 95),
-              99: np.nanpercentile(value[2], 99),
+              10: np.nanpercentile(value[3], 10),
+              25: np.nanpercentile(value[3], 25),
+              50: np.nanpercentile(value[3], 50),
+              75: np.nanpercentile(value[3], 75),
+              90: np.nanpercentile(value[3], 90),
+              95: np.nanpercentile(value[3], 95),
+              99: np.nanpercentile(value[3], 99),
+              'saturated': (value[3]>saturation_limit)/value[3].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
@@ -128,13 +158,13 @@ if __name__ == "__main__":
     percentage_fcso = {"{0}_{1}".format(*key):
              {'glon': key[0],
               'glat': key[1],
-              10: np.nanpercentile(value[3], 10),
-              25: np.nanpercentile(value[3], 25),
-              50: np.nanpercentile(value[3], 50),
-              75: np.nanpercentile(value[3], 75),
-              90: np.nanpercentile(value[3], 90),
-              95: np.nanpercentile(value[3], 95),
-              99: np.nanpercentile(value[3], 99),
+              10: np.nanpercentile(value[4], 10),
+              25: np.nanpercentile(value[4], 25),
+              50: np.nanpercentile(value[4], 50),
+              75: np.nanpercentile(value[4], 75),
+              90: np.nanpercentile(value[4], 90),
+              95: np.nanpercentile(value[4], 95),
+              99: np.nanpercentile(value[4], 99),
              }
              for key, value in results.items()
              if not isinstance(value, str)

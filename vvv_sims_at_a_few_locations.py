@@ -89,7 +89,7 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[0], 90),
               95: np.nanpercentile(value[0], 95),
               99: np.nanpercentile(value[0], 99),
-              'saturated': (value[0]>saturation_limit)/value[0].size,
+              'saturated': (value[0]>saturation_limit).sum()/value[0].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[1], 90),
               95: np.nanpercentile(value[1], 95),
               99: np.nanpercentile(value[1], 99),
-              'saturated': (value[1]>saturation_limit)/value[1].size,
+              'saturated': (value[1]>saturation_limit).sum()/value[1].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
@@ -127,7 +127,7 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[2], 90),
               95: np.nanpercentile(value[2], 95),
               99: np.nanpercentile(value[2], 99),
-              'saturated': (value[2]>saturation_limit)/value[2].size,
+              'saturated': (value[2]>saturation_limit).sum()/value[2].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)
@@ -146,7 +146,7 @@ if __name__ == "__main__":
               90: np.nanpercentile(value[3], 90),
               95: np.nanpercentile(value[3], 95),
               99: np.nanpercentile(value[3], 99),
-              'saturated': (value[3]>saturation_limit)/value[3].size,
+              'saturated': (value[3]>saturation_limit).sum()/value[3].size,
              }
              for key, value in results.items()
              if not isinstance(value, str)

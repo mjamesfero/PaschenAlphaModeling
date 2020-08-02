@@ -134,8 +134,8 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
 
 
 def make_2_model_sources_image_faster(shape, airy_radius, source_table,
-                                                                        bbox_size=10,
-                                                                        progressbar=False):
+                                      add_error_beam=False, bbox_size=10,
+                                      progressbar=False):
         """
         Make an image containing sources generated from a user-specified
         model.
@@ -212,6 +212,9 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
         model2 = models.Gaussian2D()
         model1.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
         model2.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
+        if add_error_beam:
+            model3 = models.Gaussian2D()
+            model3.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
 
         image = np.zeros(shape, dtype=np.float64)
         yidx, xidx = np.indices(shape)
@@ -246,8 +249,17 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
 
                         for param in params_to_set2:
                                 setattr(model2, param, source[param])
-                        # ONLY applies to airy!
-                        model = convolve_models(model1, model2)
+
+                        if add_error_beam:
+                            for param in params_to_set2:
+                                setattr(model3, param, source[param])
+                            model3.amplitude = model1.amplitude * 0.01
+                            model1.amplitude = model1.amplitude * 0.99
+                            model3.x_stddev = model3.y_stddev = 11*u.arcsec
+
+                            model = convolve_models(model1, model2) + model3
+                        else:
+                            model = convolve_models(model1, model2)
                         model.bounding_box = [(model1.y_0-bbox_size*model1.radius,
                                                                    model1.y_0+bbox_size*model1.radius),
                                                                   (model1.x_0-bbox_size*model1.radius,

@@ -210,11 +210,11 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
 
         model1 = models.AiryDisk2D(airy_radius)
         model2 = models.Gaussian2D()
-        model1.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
-        model2.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
+        model1.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
+        model2.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
         if add_error_beam:
             model3 = models.Gaussian2D()
-            model3.bounding_box = [(-5*airy_radius, 5*airy_radius), (-5*airy_radius, 5*airy_radius)]
+            model3.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
 
         image = np.zeros(shape, dtype=np.float64)
         yidx, xidx = np.indices(shape)
@@ -261,9 +261,9 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
                         else:
                             model = convolve_models(model1, model2)
                         model.bounding_box = [(model1.y_0-bbox_size*model1.radius,
-                                                                   model1.y_0+bbox_size*model1.radius),
-                                                                  (model1.x_0-bbox_size*model1.radius,
-                                                                   model1.x_0+bbox_size*model1.radius)]
+                                               model1.y_0+bbox_size*model1.radius),
+                                              (model1.x_0-bbox_size*model1.radius,
+                                               model1.x_0+bbox_size*model1.radius)]
 
                   
                         model.render(image)

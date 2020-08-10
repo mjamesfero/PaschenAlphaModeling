@@ -4,3 +4,6 @@ __pycache__
 Plotting Real Stars.ipynb
 stars080420.dat
 *.dat
+*.xlsx
+*.fits
+*.tgz

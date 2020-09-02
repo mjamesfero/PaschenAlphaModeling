@@ -9,3 +9,5 @@ stars080420.dat
 *.tgz
 model_stellar_spectra.png
 model_stellar_spectra.pdf
+*.pdf
+*.png

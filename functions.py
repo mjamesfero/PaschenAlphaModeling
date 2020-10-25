@@ -16,8 +16,7 @@ import numpy as np
 plt.rcParams['image.origin'] = 'lower'
 
 def make_model_sources_image_faster(shape, airy_radius, source_table,
-                                                                        bbox_size=10,
-                                                                        progressbar=False):
+                                    bbox_size=10, progressbar=False):
         """
         Make an image containing sources generated from a user-specified
         model.
@@ -95,7 +94,6 @@ def make_model_sources_image_faster(shape, airy_radius, source_table,
         image = np.zeros(shape, dtype=np.float64)
         yidx, xidx = np.indices(shape)
 
-        test = []
 
         params_to_set = []
         for param in source_table.colnames:
@@ -194,24 +192,12 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
                 data = make_model_sources_image(shape, model, sources)
                 plt.imshow(data)
         """
-        #needed: to have each model=convolve have [souces] in it 
-        #while still doing everything else
-        #models = for ii in len(source_table):
-        #            convolve_models(models.Gaussian2D(source_table['amplitude_0'][ii], 
-        #                                        source_table['x_mean_0'][ii], 
-        #                                        source_table['y_mean_0'][ii],
-        #                                        source_table['x_stddev_0'][ii],
-        #                                        source_table['y_stddev_0'][ii],
-        #                                        source_table['theta_0'][ii]), 
-        #                        models.AiryDisk2D(source_table['amplitude_1'][ii],
-        #                                        source_table['x_0_1'][ii],
-        #                                        source_table['y_0_1'][ii],
-        #                                        source_table['theta_0'][ii]))
-
+        
         model1 = models.AiryDisk2D(airy_radius)
         model2 = models.Gaussian2D()
         model1.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
         model2.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
+        
         if add_error_beam:
             model3 = models.Gaussian2D()
             model3.bounding_box = [(-bbox_size*airy_radius, bbox_size*airy_radius), (-bbox_size*airy_radius, bbox_size*airy_radius)]
@@ -219,7 +205,6 @@ def make_2_model_sources_image_faster(shape, airy_radius, source_table,
         image = np.zeros(shape, dtype=np.float64)
         yidx, xidx = np.indices(shape)
 
-        test = []
 
         params_to_set1 = []
         for param in source_table.colnames:

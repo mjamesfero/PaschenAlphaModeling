@@ -16,3 +16,4 @@ model_stellar_spectra.pdf
 *.pdf
 *.png
 *.txt
+MIRIS_data/get_miris_mosaic.py

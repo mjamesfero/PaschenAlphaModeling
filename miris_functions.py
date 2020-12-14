@@ -7,6 +7,11 @@ from astropy.io import fits
 import matplotlib.pyplot as plt
 from astroquery.vizier import Vizier
 
+from astropy.io import fits
+import glob
+from spectral_cube import lower_dimensional_structures
+import pylab as pl
+from astropy import visualization
 
 from astropy import coordinates as coord
 from astropy.coordinates import SkyCoord
@@ -119,7 +124,7 @@ def correct_keys(jj, models_table, tbl):
 
 
 
-def closest_model(name, VVV=False):
+def closest_model(name, limit=6, VVV=False):
 	""""
 	This assumes that we value teff being correct over logg.
 	Unfortunately, trying to find the best fit from existing data requires us to use a strict poset.
@@ -154,7 +159,7 @@ def closest_model(name, VVV=False):
 	})
 
 	for ii in range(len(data_stars[0])):
-		if data_stars[index, ii] >= 16:
+		if ((data_stars[index, ii] >= limit) & (data_stars[index, ii] < (limit+1))):
 			logTe.append(data_stars[5, ii])
 			logg.append(data_stars[6, ii])
 			Av.append(data_stars[8, ii])
@@ -305,15 +310,15 @@ def pixel_stars(glon, glat, width, height, model='miris'):
 
 	#Must have columns: amplitude x_mean y_mean x_stddev y_stddev theta
 		source_table = Table({'amplitude': phot_ct * transmission_fraction,
-						  	'x_mean': np.round(x),
-						  	'y_mean': np.round(y),
-						  	'x_0': x,
-						  	'y_0': y,
-						  	'radius': np.repeat(airy_radius/pixscale, nsrc),
-						  	'x_stddev': abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
-						  	'y_stddev': abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
-						  	'theta': np.pi * (x-1024),
-						 	})
+							'x_mean': np.round(x),
+							'y_mean': np.round(y),
+							'x_0': x,
+							'y_0': y,
+							'radius': np.repeat(airy_radius/pixscale, nsrc),
+							'x_stddev': abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
+							'y_stddev': abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
+							'theta': np.pi * (x-1024),
+							})
 
 	try:
 		cat2mass = cats['II/246/out']
@@ -355,7 +360,7 @@ def pixel_stars(glon, glat, width, height, model='miris'):
 									'x_stddev' : abs(1.2 * (x - 1024)/4096 * (y - 1024)/4096),
 									'y_stddev' : abs(0.8 * (-x + 1024)/4096 * (y- 1024)/4096),
 									'theta' : np.pi * (x-1024),
-							   		})
+									})
 	try:
 		source_table_both = table.vstack([source_table, source_table_2mass])
 	except:
@@ -367,3 +372,83 @@ def pixel_stars(glon, glat, width, height, model='miris'):
 			return source_table_2mass, cat2mass, header
 
 	return source_table_both, cat2, cat2mass, header
+
+#make SED plot
+#this is PASHION data
+def make_sed_plot(dict_fn):
+	teffs = []
+	data = []
+	labels = []
+
+	for key in dict_fn.keys():
+		filenames = dict_fn[key]
+		teff_key = []
+		data_key = []
+
+		for fn in filenames:
+			fh = fits.open(fn)
+			header = fh[0].header
+			sp = lower_dimensional_structures.OneDSpectrum.from_hdu(fh)
+			#sp = specutils.Spectrum1D(data=fh[0].data, wcs=wcs.WCS(header), meta={'header': header})
+			x = 10**sp.spectral_axis * u.AA
+
+			sel = (x > 18400 * u.AA) & (x < 19100 * u.AA)
+
+			#teff = header['TEFF']
+			#normcolor = (teff - 3000)/10000
+			#color = pl.cm.jet(normcolor)
+
+			#teff_key.append(teff)
+			data_key.append(sp[sel])
+			xsel = x[sel]
+
+		#teff = np.average(teff_key, axis=0)
+		datum = np.average(data_key, axis=0)
+		#teffs.append(teff)
+		data.append(datum)
+		labels.append(key)
+
+	data = np.array(data)
+	ndata = data / data[:,-1:]
+	newx = np.linspace(xsel.min(), xsel.max(), 200)
+	from scipy.interpolate import interp1d
+	ndata = interp1d(xsel, ndata, kind='cubic')(newx)
+
+	#norm = visualization.simple_norm(teffs)
+
+	segments = np.array([list(zip(newx.value,d)) for d in ndata])
+
+
+	fig = pl.figure(1)
+	fig.clf()
+	ax = pl.gca()
+	colors = ['lightpink', 'hotpink', 'r', 
+			'darkorange', 'y', 'lime', 
+			'green', 'deepskyblue', 'blue',
+			'darkblue', 'indigo', 'darkviolet']
+	lines = pl.matplotlib.collections.LineCollection(segments=segments,
+												 #cmap='jet_r',
+												 colors=colors,
+												 alpha=1)
+	#lines.set_array(np.array(teffs))
+	ax.add_collection(lines)
+
+	transmission_curve_lower = (0.95 + np.random.randn(newx.size)/1000) * ((newx > 18610*u.AA) & (newx < 18710*u.AA))
+	transmission_curve_paa = (0.95 + np.random.randn(newx.size)/1000) * ((newx > 18731*u.AA) & (newx < 18781*u.AA))
+	transmission_curve_upper = (0.95 + np.random.randn(newx.size)/1000) * ((newx > 18800*u.AA) & (newx < 18900*u.AA))
+
+	ax.plot(newx, np.array([transmission_curve_lower, transmission_curve_paa, transmission_curve_upper]).T, color='c')
+
+#ax.plot(xsel, ndata, linewidth=0.1, alpha=0.1, color=color)
+
+	ax.set_xlim(18500, 19000)
+	ax.set_ylim(0.9, 1.1)
+	ax.set_xlabel("Wavelength [$\\AA$]")
+	ax.set_ylabel("Normalized Spectral Luminosity")
+	#cb = pl.colorbar(mappable=lines)
+	#cb.set_alpha(1)
+	#cb.draw_all()
+	#cb.set_label('Effective Temperature [K]')
+
+	pl.savefig("model_stellar_spectra.png", bbox_inches='tight')
+	pl.savefig("model_stellar_spectra.pdf", bbox_inches='tight')

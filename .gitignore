@@ -17,3 +17,10 @@ model_stellar_spectra.pdf
 *.png
 *.txt
 MIRIS_data/get_miris_mosaic.py
+.ipynb_checkpoints/MIRIS-checkpoint.ipynb
+MIRIS_data/baby_pixel
+MIRIS_data/pwetty
+model_stellar_spectra.pdf
+model_stellar_spectra.png
+*.pdf
+*.png

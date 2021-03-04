@@ -394,17 +394,17 @@ def make_sed_plot(dict_fn):
 
 			sel = (x > 18400 * u.AA) & (x < 19100 * u.AA)
 
-			#teff = header['TEFF']
-			#normcolor = (teff - 3000)/10000
-			#color = pl.cm.jet(normcolor)
+			teff = header['TEFF']
+			normcolor = (teff - 3000)/10000
+			color = pl.cm.jet(normcolor)
 
-			#teff_key.append(teff)
+			teff_key.append(teff)
 			data_key.append(sp[sel])
 			xsel = x[sel]
 
-		#teff = np.average(teff_key, axis=0)
+		teff = np.average(teff_key, axis=0)
 		datum = np.average(data_key, axis=0)
-		#teffs.append(teff)
+		teffs.append(teff)
 		data.append(datum)
 		labels.append(key)
 
@@ -414,7 +414,7 @@ def make_sed_plot(dict_fn):
 	from scipy.interpolate import interp1d
 	ndata = interp1d(xsel, ndata, kind='cubic')(newx)
 
-	#norm = visualization.simple_norm(teffs)
+	norm = visualization.simple_norm(teffs)
 
 	segments = np.array([list(zip(newx.value,d)) for d in ndata])
 
@@ -427,10 +427,10 @@ def make_sed_plot(dict_fn):
 			'green', 'deepskyblue', 'blue',
 			'darkblue', 'indigo', 'darkviolet']
 	lines = pl.matplotlib.collections.LineCollection(segments=segments,
-												 #cmap='jet_r',
+												 cmap='jet_r',
 												 colors=colors,
 												 alpha=1)
-	#lines.set_array(np.array(teffs))
+	lines.set_array(np.array(teffs))
 	ax.add_collection(lines)
 
 	transmission_curve_lower = (0.95 + np.random.randn(newx.size)/1000) * ((newx > 18610*u.AA) & (newx < 18710*u.AA))
@@ -450,7 +450,7 @@ def make_sed_plot(dict_fn):
 	ax.scatter([1], [6], color=colors[9], marker='_', label='K:15-16')
 	ax.scatter([1], [6], color=colors[10], marker='_',label='K:16-17')
 	ax.scatter([1], [6], color=colors[11], marker='_',label='K:17-18')
-#ax.plot(xsel, ndata, linewidth=0.1, alpha=0.1, color=color)
+	#ax.plot(xsel, ndata, linewidth=0.1, alpha=0.1, color=color)
 
 	ax.set_xlim(18500, 19000)
 	ax.set_ylim(0.9, 1.1)
@@ -463,5 +463,4 @@ def make_sed_plot(dict_fn):
 	#cb.draw_all()
 	#cb.set_label('Effective Temperature [K]')
 
-	pl.savefig("model_stellar_spectra.png", bbox_inches='tight')
-	pl.savefig("model_stellar_spectra.pdf", bbox_inches='tight')
+	pl.savefig("model_sed_temp.png", bbox_inches='tight')

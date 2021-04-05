@@ -155,8 +155,6 @@ y_pa, x_cont = refine(y_pa_rough, x)
 
 
 def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
-	
-	teffs = []
 	data = []
 	labels = []
 	flux_pa = []
@@ -165,7 +163,6 @@ def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
 	filter_pa = []
 	for key in dict_fn.keys():
 		filenames = dict_fn[key]
-		teff_key = []
 		data_key = []
 		paa_key = []
 		paacl_key = []
@@ -173,21 +170,17 @@ def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
 #
 		for fn in filenames:
 			fh = fits.open(fn)
-			header = fh[0].header
 			sp = lower_dimensional_structures.OneDSpectrum.from_hdu(fh)
-			#sp = specutils.Spectrum1D(data=fh[0].data, wcs=wcs.WCS(header), meta={'header': header})
-			#import pdb; pdb.set_trace()
 			x_new = 10**sp.spectral_axis * u.AA
-			#pdb.set_trace()
 			sel = (x_new > 18000 * u.AA) & (x_new < 19500 * u.AA)
-			mid_pt = int(len(sel)/2)
+			mid_pt = int(len(sp[sel])/2)
 			filter_func_cont = many_small_lines(x_new[sel], x, y_cont)
 			filter_func_pa = many_small_lines(x_new[sel], x, y_pa)
 			spectra = sp[sel]
 			f_paa = np.dot(spectra, filter_func_pa)*unit #* surfarea
-			f_paacl = np.dot(spectra, filter_func_cont)*unit
-			#f_paacl = np.dot(spectra[0:mid_pt], filter_func_cont[0:mid_pt])*unit #* surfarea
-			#f_paach = np.dot(spectra[mid_pt:], filter_func_cont[mid_pt:])*unit #* surfarea
+			#f_paacl = np.dot(spectra, filter_func_cont)*unit
+			f_paacl = np.dot(spectra[0:mid_pt], filter_func_cont[0:mid_pt])*unit #* surfarea
+			f_paach = np.dot(spectra[mid_pt:], filter_func_cont[mid_pt:])*unit #* surfarea
 
 			#teff_key.append(teff)
 			unitz = f_paa.unit
@@ -195,22 +188,22 @@ def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
 			paa_key.append(f_paa.value)
 			paacl_key.append(f_paacl.value)
 			filter_pa.append(filter_func_pa)
-			#paach_key.append(f_paach.value)
-			xsel = x_new[sel]
+			paach_key.append(f_paach.value)
+			#xsel = x_new[sel]
 
 		#teff = np.average(teff_key, axis=0)
 		datum = np.average(data_key, axis=0)
 		paa = np.average(paa_key, axis=0) * unitz
 		paacl = np.average(paacl_key, axis=0) * unitz
-		#paach = np.average(paach_key, axis=0) * unitz
+		paach = np.average(paach_key, axis=0) * unitz
 		#teffs.append(teff)
 		data.append(datum)
 		labels.append(key)
 		flux_pa.append(paa)
 		flux_paacl.append(paacl)
-		#flux_paach.append(paach)
+		flux_paach.append(paach)
 
-	return flux_pa, flux_paacl, filter_pa, y_pa#flux_paach
+	return flux_pa, flux_paacl, filter_pa, flux_paach
 #pdb.set_trace()
 
-flux_pa, flux_paacl, filter_pa, y_pa = make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen)
+flux_pa, flux_paacl, filter_pa, flux_paach = make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen)

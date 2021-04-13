@@ -39,3 +39,5 @@ model_stellar_spectra.png
 model_stellar_spectra.pdf
 .ipynb_checkpoints/MIRIS-checkpoint.ipynb
 .ipynb_checkpoints/MIRIS-checkpoint.ipynb
+*.log
+.ipynb_checkpoints/Pixel Finding 041221-checkpoint.ipynb

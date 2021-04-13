@@ -203,7 +203,7 @@ def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
 		flux_paacl.append(paacl)
 		flux_paach.append(paach)
 
-	return flux_pa, flux_paacl, filter_pa, flux_paach
+	return flux_pa, flux_paacl, flux_paach
 #pdb.set_trace()
 
-flux_pa, flux_paacl, filter_pa, flux_paach = make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen)
+flux_pa, flux_paacl, flux_paach = make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen)

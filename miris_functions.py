@@ -206,9 +206,10 @@ def closest_model(name, limit=6, VVV=False):
 		
 		data_rows.append(temp_dict)
 		
+	k_avg = np.average(Ks, axis=0)
 	result = Table(rows=data_rows)
 	
-	return result
+	return result, k_avg
 
 
 

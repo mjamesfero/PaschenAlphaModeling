@@ -147,6 +147,13 @@ for jj in range(len(index)):
 for ii, group in enumerate(ranges):
     dict_fn[group] = names[ii]
 
+
+csvFile = pandas.read_csv('ks_mags.csv') 
+ks_mags = []
+for ii in range(12):
+        mag = csvFile['mag'][ii]
+        ks_mags.append(mag)
+
 y_cont_rough = many_small_lines(x, x_units, y_data)
 y_pa_rough = many_small_lines(x, x_units_pa, y_pashen)
 y_cont, x_pa  = refine(y_cont_rough, x)
@@ -207,3 +214,65 @@ def make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen):
 #pdb.set_trace()
 
 flux_pa, flux_paacl, flux_paach = make_sed_flux(dict_fn, x_units, y_data, x_units_pa, y_pashen)
+fluxes = {}
+fluxes['paa'] = flux_pa
+fluxes['paacl'] = flux_paacl
+fluxes['paach'] = flux_paach
+
+def sed_flux_function(kmags, wavelength):
+	flux_int = fluxes[wavelength]
+	flux_fin = []
+	for kmag in kmags:
+		if 6 <= kmag < 7:
+			mag_a = ks_mags[0]
+			flux_a = flux_int[0]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 7 <= kmag < 8:
+			mag_a = ks_mags[1]
+			flux_a = flux_int[1]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 8 <= kmag < 9:
+			mag_a = ks_mags[2]
+			flux_a = flux_int[2]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 9 <= kmag < 10:
+			mag_a = ks_mags[3]
+			flux_a = flux_int[3]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 10 <= kmag < 11:
+			mag_a = ks_mags[4]
+			flux_a = flux_int[4]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 11 <= kmag < 12:
+			mag_a = ks_mags[5]
+			flux_a = flux_int[5]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 12 <= kmag < 13:
+			mag_a = ks_mags[6]
+			flux_a = flux_int[6]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 13 <= kmag < 14:
+			mag_a = ks_mags[7]
+			flux_a = flux_int[7]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 14 <= kmag < 15:
+			mag_a = ks_mags[8]
+			flux_a = flux_int[8]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 15 <= kmag < 16:
+			mag_a = ks_mags[9]
+			flux_a = flux_int[9]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 16 <= kmag < 17:
+			mag_a = ks_mags[10]
+			flux_a = flux_int[10]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		elif 17 <= kmag <= 18:
+			mag_a = ks_mags[11]
+			flux_a = flux_int[11]
+			flux_b = flux_a*10**((mag_a-kmag)/2.5)
+		else:
+			print(f'You fucked up! Mag is {kmag}!')
+			flux_b=69*u.Jy
+		flux_fin.append(flux_b)
+	return flux_fin

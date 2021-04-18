@@ -15,7 +15,7 @@ def get_trilegal(coord_sys, l_coord, b_coord, area, catalog, fil_num, mag_max):
 	#website
 	driver.get('http://stev.oapd.inaf.it/cgi-bin/trilegal')
 	#pause to look human (for now)
-	time.sleep(3)
+	
 	#locate desired fields
 	#coord_type = driver.find_element_by_name('gal_coord')
 	coord_l = driver.find_element_by_name('gc_l')
@@ -56,5 +56,10 @@ def get_trilegal(coord_sys, l_coord, b_coord, area, catalog, fil_num, mag_max):
 	value = 'tab_mag_odfnew/tab_mag_'+phot_systems[catalog]
 	sys_type.select_by_value(value)
 	driver.find_element_by_name('submit_form').click()
+
+	results = driver.find_element_by_link_text('THIS LINK')
+
+	time.sleep(130)
+	results.click()
 	
 get_trilegal('galactic', 0, 0, 1, '2mass jhk', 3, 6)

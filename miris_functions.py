@@ -372,11 +372,13 @@ def pixel_stars(glon, glat, width, height, model='miris'):
 		else:
 			return source_table_2mass, cat2mass, header
 
-	return source_table_both, cat2, cat2mass, header
+	return source_table_both, cat2, cat2mass, header, cat2['Ksmag3']
 
+
+source_table_both, cat2, cat2mass, header, cat = pixel_stars(0.1*u.arcsec, 2.5*u.arcsec, 50*u.arcsec, height=50*u.arcsec, model='miris')
 #make SED plot
 #this is PASHION data
-def make_sed_plot(dict_fn):
+""" def make_sed_plot(dict_fn):
 	teffs = []
 	data = []
 	labels = []
@@ -464,4 +466,4 @@ def make_sed_plot(dict_fn):
 	#cb.draw_all()
 	#cb.set_label('Effective Temperature [K]')
 
-	pl.savefig("model_sed_temp.png", bbox_inches='tight')
+	pl.savefig("model_sed_temp.png", bbox_inches='tight') """

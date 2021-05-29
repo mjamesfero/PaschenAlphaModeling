@@ -21,7 +21,6 @@ from astropy.utils.console import ProgressBar
 from photutils.datasets import make_random_gaussians_table, make_model_sources_image
 
 from astropy import visualization
-from miris_functions import pixel_stars, closest_model, make_sed_plot
 
 import pandas 
 import csv 
@@ -225,54 +224,56 @@ def sed_flux_function(kmags, wavelength):
 	for kmag in kmags:
 		if 6 <= kmag < 7:
 			mag_a = ks_mags[0]
-			flux_a = flux_int[0]
+			flux_a = flux_int[0].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 7 <= kmag < 8:
 			mag_a = ks_mags[1]
-			flux_a = flux_int[1]
+			flux_a = flux_int[1].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 8 <= kmag < 9:
 			mag_a = ks_mags[2]
-			flux_a = flux_int[2]
+			flux_a = flux_int[2].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 9 <= kmag < 10:
 			mag_a = ks_mags[3]
-			flux_a = flux_int[3]
+			flux_a = flux_int[3].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 10 <= kmag < 11:
 			mag_a = ks_mags[4]
-			flux_a = flux_int[4]
+			flux_a = flux_int[4].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 11 <= kmag < 12:
 			mag_a = ks_mags[5]
-			flux_a = flux_int[5]
+			flux_a = flux_int[5].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 12 <= kmag < 13:
 			mag_a = ks_mags[6]
-			flux_a = flux_int[6]
+			flux_a = flux_int[6].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 13 <= kmag < 14:
 			mag_a = ks_mags[7]
-			flux_a = flux_int[7]
+			flux_a = flux_int[7].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 14 <= kmag < 15:
 			mag_a = ks_mags[8]
-			flux_a = flux_int[8]
+			flux_a = flux_int[8].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 15 <= kmag < 16:
 			mag_a = ks_mags[9]
-			flux_a = flux_int[9]
+			flux_a = flux_int[9].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 16 <= kmag < 17:
 			mag_a = ks_mags[10]
-			flux_a = flux_int[10]
+			flux_a = flux_int[10].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		elif 17 <= kmag <= 18:
 			mag_a = ks_mags[11]
-			flux_a = flux_int[11]
+			flux_a = flux_int[11].value
 			flux_b = flux_a*10**((mag_a-kmag)/2.5)
 		else:
 			print(f'You fucked up! Mag is {kmag}!')
-			flux_b=69*u.Jy
+			flux_b=69
 		flux_fin.append(flux_b)
 	return flux_fin
+
+print(fluxes['paa'][0])

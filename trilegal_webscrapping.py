@@ -134,7 +134,7 @@ class Trilegal:
         
         return formatted_number
 
-    def search(self, gc_l=0, gc_b=90, field=0.00001):
+    def search(self, gc_l=0, gc_b=90, field=0.001):
         self.data['gc_l'] = str(gc_l)
         self.data['gc_b'] = str(gc_b)
         self.data['field'] = str(field)
@@ -175,8 +175,8 @@ class Trilegal:
         return results
 
 
-# test = Trilegal()
-# test_res = test.search_arcmin()
-# print(test_res)
-# print(test_res[0])
-# print(test_res[0][12])
+#test = Trilegal(phot_system='vista')
+#test_res = test.search_arcmin()
+#print(test_res)
+#print(test_res['Ks'])
+#print(test_res[0][12])

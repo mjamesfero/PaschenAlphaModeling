@@ -275,5 +275,3 @@ def sed_flux_function(kmags, wavelength):
 			flux_b=69
 		flux_fin.append(flux_b)
 	return flux_fin
-
-print(fluxes['paa'][0])

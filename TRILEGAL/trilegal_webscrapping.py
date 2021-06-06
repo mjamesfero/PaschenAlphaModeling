@@ -13,7 +13,7 @@ class Trilegal:
             coord = '2'
         else:
             coord = '1'
-
+        self.phot_syst = phot_system
         phot_systems = {'2mass spitzer': 'tab_mag_2mass_spitzer.dat',
 					'2mass wise': 'tab_mag_2mass_spitzer_wise.dat',
 					'2mass jhk': 'tab_mag_2mass.dat',
@@ -119,10 +119,31 @@ class Trilegal:
         '.cgifields': 'halo_kind',
         '.cgifields': 'thickdisk_kind'}
     
+    def _punctuation(self, number):
+        formatted_number = ''
+        word = number
+        if number is not str:
+            word = str(number)
+        for letter in word:
+            if letter is '.':
+                formatted_number += 'p'
+            elif letter is ' ':
+                formatted_number += '_'
+            else:
+                formatted_number += letter
+        
+        return formatted_number
+
     def search(self, gc_l=0, gc_b=90, field=0.00001):
         self.data['gc_l'] = str(gc_l)
         self.data['gc_b'] = str(gc_b)
         self.data['field'] = str(field)
+
+        glon = self._punctuation(gc_l)
+        glat = self._punctuation(gc_b)
+        gfield = self._punctuation(field)
+        system_name = self._punctuation(self.phot_syst)
+
         response = requests.post("http://stev.oapd.inaf.it/cgi-bin/trilegal_1.6", data=self.data)
         soup = BeautifulSoup(response.text, features="html5lib")
         url = soup.find('input', attrs={'name':'outurl'}).attrs['value']
@@ -136,6 +157,9 @@ class Trilegal:
 
         try:
             datatable = ascii.read(datatable_response.text)
+            save_time = time.time()
+            file_name = f"gal_{glon}_{glat}_{gfield}_{system_name}_{save_time}.dat"
+            ascii.write(datatable, file_name, overwrite=True)
         except:
             datatable = 'No stars found.'
         return datatable
@@ -151,5 +175,8 @@ class Trilegal:
         return results
 
 
-test = Trilegal()
-print(test.search_arcmin())
+# test = Trilegal()
+# test_res = test.search_arcmin()
+# print(test_res)
+# print(test_res[0])
+# print(test_res[0][12])

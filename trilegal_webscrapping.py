@@ -127,6 +127,8 @@ class Trilegal:
         for letter in word:
             if letter is '.':
                 formatted_number += 'p'
+            elif letter is '-':
+                formatted_number += 'n'
             elif letter is ' ':
                 formatted_number += '_'
             else:
@@ -134,10 +136,16 @@ class Trilegal:
         
         return formatted_number
 
-    def search(self, gc_l=0, gc_b=90, field=0.001):
-        self.data['gc_l'] = str(gc_l)
-        self.data['gc_b'] = str(gc_b)
+    def search(self, gc_l=0, gc_b=90, field=0.001, icm_lim=3, mag_lim=18):
+        if self.data['gal_coord'] == 1:
+            self.data['gc_l'] = str(gc_l)
+            self.data['gc_b'] = str(gc_b)
+        elif self.data['gal_coord'] == 2:
+            self.data['eq_alpha'] = str(gc_l)
+            self.data['eq_delta'] = str(gc_b)
         self.data['field'] = str(field)
+        self.data['icm_lim'] = str(icm_lim)
+        self.data['mag_lim'] = str(mag_lim)
 
         glon = self._punctuation(gc_l)
         glat = self._punctuation(gc_b)

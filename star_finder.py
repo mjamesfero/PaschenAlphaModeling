@@ -6,7 +6,6 @@ from astropy.table import Table
 from astropy.io import fits
 from astroquery.vizier import Vizier
 
-from astropy.io import fits
 import glob
 from spectral_cube import lower_dimensional_structures
 import pylab as pl

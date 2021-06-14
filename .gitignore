@@ -44,3 +44,6 @@ model_stellar_spectra.pdf
 *.json
 *.html
 .ipynb_checkpoints/Background Flux v Longitude-checkpoint.ipynb
+.ipynb_checkpoints/Background Flux v Longitude-checkpoint.ipynb
+.ipynb_checkpoints/Background Flux v Longitude-checkpoint.ipynb
+*.zip

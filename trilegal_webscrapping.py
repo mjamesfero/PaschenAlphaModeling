@@ -136,7 +136,7 @@ class Trilegal:
         
         return formatted_number
 
-    def search(self, gc_l=0, gc_b=90, field=0.001, icm_lim=3, mag_lim=18):
+    def search(self, gc_l=0, gc_b=90, field=0.001, icm_lim=3, mag_lim=16):
         if self.data['gal_coord'] == 1:
             self.data['gc_l'] = str(gc_l)
             self.data['gc_b'] = str(gc_b)
@@ -172,14 +172,14 @@ class Trilegal:
             datatable = 'No stars found.'
         return datatable
     
-    def search_arcmin(self, field=50):
+    def search_arcmin(self, field=50, gc_l=0, gc_b=90, icm_lim=3, mag_lim=16):
         field_arcmin = field/3600
-        results = self.search(field=field_arcmin)
+        results = self.search(field=field_arcmin, gc_l=0, gc_b=90, icm_lim=3, mag_lim=18)
         return results
     
-    def search_arcsec(self, field=50):
+    def search_arcsec(self, field=50, gc_l=0, gc_b=90, icm_lim=3, mag_lim=16):
         field_arcsec = field/(3600*3600)
-        results = self.search(field=field_arcsec)
+        results = self.search(field=field_arcsec, gc_l=0, gc_b=90, icm_lim=3, mag_lim=18)
         return results
 
 

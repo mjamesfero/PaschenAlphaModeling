@@ -7,12 +7,15 @@ from astropy.io import ascii
 class Trilegal:
 
     def __init__(self, coord_sys='g', phot_system='2mass jhk'):
+        #this translates between galactic coordinates and equitorial coordinates
         if coord_sys.lower()[0] is 'g':
             coord = '1'
         elif coord_sys.lower()[0] is 'e':
             coord = '2'
         else:
             coord = '1'
+        #this determines the photometry system used
+        #I had this be included in the initialization because it seemed important
         self.phot_syst = phot_system
         phot_systems = {'2mass spitzer': 'tab_mag_2mass_spitzer.dat',
 					'2mass wise': 'tab_mag_2mass_spitzer_wise.dat',
@@ -35,6 +38,7 @@ class Trilegal:
                     'deltaa': 'tab_mag_deltaa.dat'}
         phot_index = phot_system.lower()
         photsys = phot_systems[phot_index]
+        #this is all the data sent
         self.data = {'submit_form': 'Submit',
         'trilegal_version': '1.6',
         'gal_coord': coord,
@@ -55,8 +59,8 @@ class Trilegal:
         'output_printbinaries': '0',
         'extinction_h_z': '110',
         'extinction_h_r': '100000',
-        'extinction_rho_sun': '0.00015',
-        'extinction_kind': '2',
+        'extinction_rho_sun': '0.002',
+        'extinction_kind': '1',
         'extinction_infty': '0.0378',
         'extinction_sigma': '0',
         'r_sun': '8700',
@@ -120,6 +124,11 @@ class Trilegal:
         '.cgifields': 'thickdisk_kind'}
     
     def _punctuation(self, number):
+        """
+        Turns normal strings into computer friendly file names.
+        The notation is 'p' stands for period and 'n' stands for negative.
+        Spaces are replaced with underscores.
+        """
         formatted_number = ''
         word = number
         if number is not str:
@@ -137,6 +146,37 @@ class Trilegal:
         return formatted_number
 
     def search(self, gc_l=0, gc_b=90, field=0.001, icm_lim=3, mag_lim=16):
+        """
+        Searches a given field at a given lon and lat. The filter and magnitude limit
+        are also set here. The query is run through TRILEGAL, and if there are results,
+        they are saved to a .dat file.
+
+        Parameters
+        ----------
+        gc_l : float
+                The longitude being searched.
+
+        gc_b : float
+                The latitude being searched.
+
+        field : float
+                The size of the field in deg^2.
+
+        icm_lim : int
+                The limiting filter, set on 3 as default.
+        
+        mag_lim : int
+                The upper limit of the (icm_lim)th filter. 
+
+        Returns
+        -------
+        datatable : ascii table and .dat file
+                Results from TRILEGAL query (or 'No stars found.' if no stars were found)
+                stored as an ascii table and saved as a .dat file using the naming sequence
+                'gal_{glon}_{glat}_{gfield}_{system_name}_{save_time}.dat'. If no stars were
+                found, no .dat file is saved.
+
+        """
         if self.data['gal_coord'] == 1:
             self.data['gc_l'] = str(gc_l)
             self.data['gc_b'] = str(gc_b)
@@ -173,14 +213,35 @@ class Trilegal:
         return datatable
     
     def search_arcmin(self, field=50, gc_l=0, gc_b=90, icm_lim=3, mag_lim=16):
+        """
+        Same as search() except field is in arcminutes.
+        """
         field_arcmin = field/3600
         results = self.search(field=field_arcmin, gc_l=0, gc_b=90, icm_lim=3, mag_lim=18)
         return results
     
     def search_arcsec(self, field=50, gc_l=0, gc_b=90, icm_lim=3, mag_lim=16):
+        """
+        Same as search() except field is in arcseconds.
+        """
         field_arcsec = field/(3600*3600)
         results = self.search(field=field_arcsec, gc_l=0, gc_b=90, icm_lim=3, mag_lim=18)
         return results
+    
+    def extinction_params(self, kind=1, h_z=110, h_r=100000, rho_sun=0.002, infinity=0.0378, sigma=0):
+        """
+        For 'no dust extinction or exponential disk exp(-|z|/hz,dust)×exp(-R/hR,dust) 
+        with scale heigth hz,dust= pc and scale length hR,dust= pc' type 'kind = 0'.
+        For local calibration, type 'kind = 1'.
+        For calibration at infinity, type 'kind=2'.
+        """
+        self.data['extinction_h_z'] = str(h_z)
+        self.data['extinction_h_r'] = str(h_r)
+        self.data['extinction_rho_sun'] = str(rho_sun)
+        self.data['extinction_kind'] = str(kind)
+        self.data['extinction_infty'] = str(infinity)
+        self.data['extinction_sigma'] = str(sigma)
+        return
 
 
 #test = Trilegal(phot_system='vista')

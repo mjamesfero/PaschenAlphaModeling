@@ -183,26 +183,25 @@ def trytoget_miris(glon, glat):
         stars_background_im_paach = fits.getdata(paachfn)
         stars_background_im_paacl = fits.getdata(paaclfn)
 
-# def miris_bgd_flux(glon_and_glat):
-#     """
-#     Find the expected background flux per each MIRIS pixel.
-#     Useless
-#     """
-#     glons = []
-#     glats = []
-#     fluxes = []
-#     for point in glon_and_glat:
-#         glon = point[0]
-#         glat = point[1]
-#         flux = background_flux(glon, glat, field=field)
-#         glons.append(glon)
-#         glats.append(glat)
-#         fluxes.append(flux)
+def miris_bgd_flux(glon_and_glat):
+    """
+    Find the expected background flux per each MIRIS pixel.
+    Useless
+    """
+    glons = []
+    glats = []
+    fluxes = []
+    for point in glon_and_glat:
+        glon = point[0]
+        glat = point[1]
+        flux = background_flux(glon, glat, field=field)
+        glons.append(glon)
+        glats.append(glat)
+        fluxes.append(flux)
     
-#     result = {}
-#     result['longitude']= glons
-#     result['latitude'] = glats
-#     result['flux per pix'] = flux
+    result = {}
+    result['longitude']= glons
+    result['latitude'] = glats
+    result['flux per pix'] = fluxes
 
-#     table_f = Table(result)
-#     return table_f
+    return result

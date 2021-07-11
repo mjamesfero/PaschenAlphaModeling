@@ -43,7 +43,7 @@ class Trilegal:
         'trilegal_version': '1.6',
         'gal_coord': coord,
         'gc_l': '0',
-        'gc_b': '90',
+        'gc_b': '0.1',
         'eq_alpha': '0',
         'eq_delta': '0',
         'field': '1',
@@ -145,7 +145,7 @@ class Trilegal:
         
         return formatted_number
 
-    def search(self, gc_l=0, gc_b=90, field=0.001, icm_lim=3, mag_lim=16):
+    def search(self, gc_l=0, gc_b=0.1, field=0.001, icm_lim=3, mag_lim=16):
         """
         Searches a given field at a given lon and lat. The filter and magnitude limit
         are also set here. The query is run through TRILEGAL, and if there are results,
@@ -177,10 +177,10 @@ class Trilegal:
                 found, no .dat file is saved.
 
         """
-        if self.data['gal_coord'] == 1:
+        if self.data['gal_coord'] == '1':
             self.data['gc_l'] = str(gc_l)
             self.data['gc_b'] = str(gc_b)
-        elif self.data['gal_coord'] == 2:
+        elif self.data['gal_coord'] == '2':
             self.data['eq_alpha'] = str(gc_l)
             self.data['eq_delta'] = str(gc_b)
         self.data['field'] = str(field)
@@ -243,9 +243,7 @@ class Trilegal:
         self.data['extinction_sigma'] = str(sigma)
         return
 
-
-#test = Trilegal(phot_system='vista')
-#test_res = test.search_arcmin()
-#print(test_res)
-#print(test_res['Ks'])
-#print(test_res[0][12])
+# field = (47.5/3600)**2
+# test = Trilegal()
+# test_res = test.search(field=field)
+# print(test_res)

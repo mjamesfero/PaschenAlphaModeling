@@ -190,18 +190,28 @@ def miris_bgd_flux(glon_and_glat):
     """
     glons = []
     glats = []
-    fluxes = []
+    paa = []
+    paach = []
+    paacl = []
     for point in glon_and_glat:
         glon = point[0]
         glat = point[1]
         flux = background_flux(glon, glat, field=field)
+        f_paa = flux[0]
+        f_paach = flux[1]
+        f_paacl = flux[2]
         glons.append(glon)
         glats.append(glat)
-        fluxes.append(flux)
+        paa.append(f_paa)
+        paach.append(f_paach)
+        paacl.append(f_paacl)
     
     result = {}
     result['longitude']= glons
     result['latitude'] = glats
-    result['flux per pix'] = fluxes
+    result['flux paa'] = paa
+    result['flux paach'] = paach
+    result['flux paacl'] = paacl
+    table_f = Table(result)
 
-    return result
+    return table_f

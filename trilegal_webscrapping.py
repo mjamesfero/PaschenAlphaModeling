@@ -3,14 +3,16 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import time
 from astropy.io import ascii
+import numpy as np
+import pandas 
+import csv 
+import glob
 
 class Trilegal:
 
-    def __init__(self, coord_sys='g', phot_system='2mass jhk'):
+    def __init__(self, Equitorial=False, phot_system='2mass jhk'):
         #this translates between galactic coordinates and equitorial coordinates
-        if coord_sys.lower()[0] is 'g':
-            coord = '1'
-        elif coord_sys.lower()[0] is 'e':
+        if Equitorial:
             coord = '2'
         else:
             coord = '1'
@@ -149,7 +151,7 @@ class Trilegal:
         """
         Searches a given field at a given lon and lat. The filter and magnitude limit
         are also set here. The query is run through TRILEGAL, and if there are results,
-        they are saved to a .dat file.
+        they are saved to a .csv file.
 
         Parameters
         ----------
@@ -173,14 +175,16 @@ class Trilegal:
         datatable : ascii table and .dat file
                 Results from TRILEGAL query (or 'No stars found.' if no stars were found)
                 stored as an ascii table and saved as a .dat file using the naming sequence
-                'gal_{glon}_{glat}_{gfield}_{system_name}_{save_time}.dat'. If no stars were
+                '{coor}_{glon}_{glat}_{gfield}_{system_name}_{save_time}.csv'. If no stars were
                 found, no .dat file is saved.
 
         """
         if self.data['gal_coord'] == '1':
+            coor = 'gal'
             self.data['gc_l'] = str(gc_l)
             self.data['gc_b'] = str(gc_b)
         elif self.data['gal_coord'] == '2':
+            coor='fk5'
             self.data['eq_alpha'] = str(gc_l)
             self.data['eq_delta'] = str(gc_b)
         self.data['field'] = str(field)
@@ -204,9 +208,11 @@ class Trilegal:
             time.sleep(5)
 
         try:
-            datatable = ascii.read(datatable_response.text)
+            import pdb; pdb.set_trace()
+            text = datatable_response.text.replace('\n#TRILEGAL normally terminated\n','')
+            datatable = ascii.read(text)
             save_time = time.time()
-            file_name = f"gal_{glon}_{glat}_{gfield}_{system_name}_{save_time}.dat"
+            file_name = f"{coor}_{glon}_{glat}_{gfield}_{system_name}_{save_time}.csv"
             ascii.write(datatable, file_name, overwrite=True)
         except:
             datatable = 'No stars found.'
@@ -242,6 +248,46 @@ class Trilegal:
         self.data['extinction_infty'] = str(infinity)
         self.data['extinction_sigma'] = str(sigma)
         return
+    
+    def _try_to_get(self,gc_l=0, gc_b=0.1, field=0.001):
+        """
+        Internal function for returning the most recently generated file
+        for a given region and catalog. If none exists, it will move on to
+        searching the region as usual.
+        """
+        if self.data['gal_coord'] == '1':
+            coor = 'gal'
+        elif self.data['gal_coord'] == '2':
+            coor='fk5'
+        glon = self._punctuation(gc_l)
+        glat = self._punctuation(gc_b)
+        gfield = self._punctuation(field)
+        system_name = self._punctuation(self.phot_syst)
+        filename = f"{coor}_{glon}_{glat}_{gfield}_{system_name}_*.csv"
+        files = glob.glob(filename)
+        print(files)
+        if files:
+            fn=files[-1]
+            print(fn)
+            file = pandas.read_csv(fn)
+            return file
+        else:
+            file = False
+            return file
+        
+    def big_search(self, gc_l=0, gc_b=0.1, field=0.001, icm_lim=3, mag_lim=16):
+        """
+        A modified version of self.search that allows for jobs to be done in batches 
+        for large data sets. 
+        Pulls up previous searches to avoid unnecessary computing time.
+        """
+        file = self._try_to_get(gc_l=gc_l, gc_b=gc_b, field=field)
+        if not file.empty:
+            return file
+        else:
+            new_file = self.search(gc_l=gc_l, gc_b=gc_b, field=field, icm_lim=icm_lim, mag_lim=mag_lim)
+            return new_file
+
 
 # field = (47.5/3600)**2
 # test = Trilegal()

@@ -57,7 +57,7 @@ transmission_fraction = 1
 
 def make_source_table(glon, glat):
     Viz = Vizier(row_limit=int(1e6))
-    cats = Viz.query_region(SkyCoord(glon, glat, frame='galactic'),
+    cats = SkyCoord(glon, glat, frame='galactic',
                             width=width, height=height, 
                             catalog=["II/348", "II/246"])
 
@@ -183,7 +183,7 @@ def trytoget_miris(glon, glat):
         stars_background_im_paach = fits.getdata(paachfn)
         stars_background_im_paacl = fits.getdata(paaclfn)
 
-def miris_bgd_flux(glon_and_glat):
+def miris_bgd_flux(glon_and_glat, fk5=False):
     """
     Find the expected background flux per each MIRIS pixel.
     Useless
@@ -196,7 +196,7 @@ def miris_bgd_flux(glon_and_glat):
     for point in glon_and_glat:
         glon = point[0]
         glat = point[1]
-        flux = background_flux(glon, glat, field=field)
+        flux = background_flux(glon, glat, fk5=fk5, field=field)
         f_paa = flux[0]
         f_paach = flux[1]
         f_paacl = flux[2]

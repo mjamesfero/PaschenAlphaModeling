@@ -5,14 +5,14 @@ from astropy.table import Table
 import matplotlib.pyplot as plt
 plt.style.use('dark_background')
 
-trilegal_2mass = Trilegal()
-trilegal_vista = Trilegal(phot_system='vista')
 
-def background_flux(glon, glat, field=0.005, VVV=False):
+def background_flux(glon, glat, field=0.005, VVV=False, fk5=False):
+    trilegal_2mass = Trilegal(Equitorial=fk5)
+    trilegal_vista = Trilegal(phot_system='vista')
     if VVV:
-        data_stars = trilegal_vista.search(gc_l=glon, gc_b=glat, field=field)
+        data_stars = trilegal_vista.big_search(gc_l=glon, gc_b=glat, field=field)
     else:
-        data_stars = trilegal_2mass.search(gc_l=glon, gc_b=glat, field=field)
+        data_stars = trilegal_2mass.big_search(gc_l=glon, gc_b=glat, field=field)
     
     kmags = []
     fluxes = []
